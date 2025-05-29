@@ -1,0 +1,446 @@
+{
+  "@@locale": "en",
+  "@@last_modified": "2024-12-19T12:00:00.000Z",
+
+  "appTitle": "SportGo2",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+
+  "selectTimer": "Select Workout Timer",
+  "@selectTimer": {
+    "description": "Main screen title for selecting workout type"
+  },
+
+  "start": "START",
+  "@start": {
+    "description": "Start button text"
+  },
+
+  "startWorkout": "Start Workout",
+  "@startWorkout": {
+    "description": "Start workout button text"
+  },
+
+  "stop": "STOP",
+  "@stop": {
+    "description": "Stop button text"
+  },
+
+  "pause": "PAUSE",
+  "@pause": {
+    "description": "Pause button text"
+  },
+
+  "resume": "RESUME",
+  "@resume": {
+    "description": "Resume button text"
+  },
+
+  "finish": "FINISH",
+  "@finish": {
+    "description": "Finish button text"
+  },
+
+  "complete": "COMPLETE",
+  "@complete": {
+    "description": "Complete button text"
+  },
+
+  "done": "DONE",
+  "@done": {
+    "description": "Done button text"
+  },
+
+  "back": "Back",
+  "@back": {
+    "description": "Back button text"
+  },
+
+  "yes": "Yes",
+  "@yes": {
+    "description": "Yes button text"
+  },
+
+  "no": "No",
+  "@no": {
+    "description": "No button text"
+  },
+
+  "select": "Select",
+  "@select": {
+    "description": "Select button text"
+  },
+
+  "minutes": "Minutes",
+  "@minutes": {
+    "description": "Minutes label"
+  },
+
+  "seconds": "Seconds",
+  "@seconds": {
+    "description": "Seconds label"
+  },
+
+  "hours": "Hours",
+  "@hours": {
+    "description": "Hours label"
+  },
+
+  "round": "Round",
+  "@round": {
+    "description": "Round label"
+  },
+
+  "lap": "Lap",
+  "@lap": {
+    "description": "Lap time label"
+  },
+
+  "lapTime": "Lap Time",
+  "@lapTime": {
+    "description": "Lap time label"
+  },
+
+  "totalTime": "Total Time",
+  "@totalTime": {
+    "description": "Total time label"
+  },
+
+  "remainingTime": "Remaining Time",
+  "@remainingTime": {
+    "description": "Remaining time label"
+  },
+
+  "restTime": "Rest Time",
+  "@restTime": {
+    "description": "Rest time label"
+  },
+
+  "rest": "REST",
+  "@rest": {
+    "description": "Rest state label"
+  },
+
+  "roundDuration": "Round Duration",
+  "@roundDuration": {
+    "description": "Round duration label"
+  },
+
+  "roundsCount": "Number of Rounds",
+  "@roundsCount": {
+    "description": "Number of rounds label"
+  },
+
+  "timeFormatHint": "hours : minutes : seconds",
+  "@timeFormatHint": {
+    "description": "Time format hint text"
+  },
+
+  "classicTitle": "Classic Stopwatch",
+  "@classicTitle": {
+    "description": "Classic timer title"
+  },
+
+  "classicSubtitle": "Free-form timing",
+  "@classicSubtitle": {
+    "description": "Classic timer subtitle"
+  },
+
+  "classicDescription": "Simple stopwatch with lap times. Perfect for free-form workouts where you control the pace.",
+  "@classicDescription": {
+    "description": "Classic timer description"
+  },
+
+  "interval1Title": "Interval Timer",
+  "@interval1Title": {
+    "description": "Interval timer title"
+  },
+
+  "interval1Subtitle": "Rounds with rest",
+  "@interval1Subtitle": {
+    "description": "Interval timer subtitle"
+  },
+
+  "interval1Description": "Set the number of rounds and rest time. Perfect for circuit training and interval workouts.",
+  "@interval1Description": {
+    "description": "Interval timer description"
+  },
+
+  "interval2Title": "Fixed Round Timer",
+  "@interval2Title": {
+    "description": "Fixed round timer title"
+  },
+
+  "interval2Subtitle": "Timed rounds + rest",
+  "@interval2Subtitle": {
+    "description": "Fixed round timer subtitle"
+  },
+
+  "interval2Description": "Set exact duration for both work and rest periods. Ideal for structured workouts like Tabata.",
+  "@interval2Description": {
+    "description": "Fixed round timer description"
+  },
+
+  "intensiveTitle": "Intensive Timer",
+  "@intensiveTitle": {
+    "description": "Intensive timer title"
+  },
+
+  "intensiveSubtitle": "Push to your limit",
+  "@intensiveSubtitle": {
+    "description": "Intensive timer subtitle"
+  },
+
+  "intensiveDescription": "Set a time limit and see how many rounds you can complete. Great for testing your limits.",
+  "@intensiveDescription": {
+    "description": "Intensive timer description"
+  },
+
+  "intensiveWorkout": "Intensive Workout",
+  "@intensiveWorkout": {
+    "description": "Intensive workout label"
+  },
+
+  "noRestTitle": "No Rest Rounds",
+  "@noRestTitle": {
+    "description": "No rest timer title"
+  },
+
+  "noRestSubtitle": "Continuous rounds",
+  "@noRestSubtitle": {
+    "description": "No rest timer subtitle"
+  },
+
+  "noRestDescription": "Set the number of rounds without rest periods. You control when each round ends.",
+  "@noRestDescription": {
+    "description": "No rest timer description"
+  },
+
+  "noRestRounds": "Rounds without Rest",
+  "@noRestRounds": {
+    "description": "Rounds without rest label"
+  },
+
+  "countdownTitle": "Countdown Timer",
+  "@countdownTitle": {
+    "description": "Countdown timer title"
+  },
+
+  "countdownSubtitle": "Count down to zero",
+  "@countdownSubtitle": {
+    "description": "Countdown timer subtitle"
+  },
+
+  "countdownDescription": "Set a specific time and count down to zero. Perfect for timed challenges.",
+  "@countdownDescription": {
+    "description": "Countdown timer description"
+  },
+
+  "enterData": "Enter Data",
+  "@enterData": {
+    "description": "Enter data label"
+  },
+
+  "invalidTime": "Please enter a valid time",
+  "@invalidTime": {
+    "description": "Invalid time error message"
+  },
+
+  "confirmEnd": "Are you sure? Data will not be saved.",
+  "@confirmEnd": {
+    "description": "Confirm end without saving"
+  },
+
+  "saveWorkoutPrompt": "Save this workout to history?",
+  "@saveWorkoutPrompt": {
+    "description": "Save workout dialog prompt"
+  },
+
+  "workoutSaved": "Workout saved!",
+  "@workoutSaved": {
+    "description": "Workout saved confirmation"
+  },
+
+  "workoutAlreadySaved": "Workout already saved",
+  "@workoutAlreadySaved": {
+    "description": "Workout already saved message"
+  },
+
+  "saveWorkout": "Save Workout",
+  "@saveWorkout": {
+    "description": "Save workout button text"
+  },
+
+  "shareReport": "Share Report",
+  "@shareReport": {
+    "description": "Share report button text"
+  },
+
+  "viewHistory": "View History",
+  "@viewHistory": {
+    "description": "View history button text"
+  },
+
+  "workoutReport": "Workout Report",
+  "@workoutReport": {
+    "description": "Workout report title"
+  },
+
+  "report": "Report",
+  "@report": {
+    "description": "Report label"
+  },
+
+  "summaryReport": "Summary Report",
+  "@summaryReport": {
+    "description": "Summary report title"
+  },
+
+  "myWorkoutReport": "My Workout Report",
+  "@myWorkoutReport": {
+    "description": "My workout report title for sharing"
+  },
+
+  "stopwatch": "Stopwatch",
+  "@stopwatch": {
+    "description": "Stopwatch label"
+  },
+
+  "pauseWorkout": "Pause Workout",
+  "@pauseWorkout": {
+    "description": "Pause workout tooltip"
+  },
+
+  "resumeWorkout": "Resume Workout",
+  "@resumeWorkout": {
+    "description": "Resume workout tooltip"
+  },
+
+  "finishWorkout": "Finish Workout",
+  "@finishWorkout": {
+    "description": "Finish workout button text"
+  },
+
+  "finishRound": "Finish Round",
+  "@finishRound": {
+    "description": "Finish round button text"
+  },
+
+  "waitingRest": "Waiting for Rest",
+  "@waitingRest": {
+    "description": "Waiting for rest state"
+  },
+
+  "roundNumber": "Round {number}",
+  "@roundNumber": {
+    "description": "Round number display",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "1"
+      }
+    }
+  },
+
+  "roundProgress": "Round {current} of {total}",
+  "@roundProgress": {
+    "description": "Round progress display",
+    "placeholders": {
+      "current": {
+        "type": "int",
+        "example": "1"
+      },
+      "total": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+
+  "version": "Version",
+  "@version": {
+    "description": "Version label"
+  },
+
+  "developer": "Developer",
+  "@developer": {
+    "description": "Developer label"
+  },
+
+  "description": "Description",
+  "@description": {
+    "description": "Description label"
+  },
+
+  "contacts": "Contacts",
+  "@contacts": {
+    "description": "Contacts label"
+  },
+
+  "aboutDescription": "Modern CrossFit timer app with multiple workout modes. Designed for athletes who want to efficiently track their workouts.",
+  "@aboutDescription": {
+    "description": "About app description"
+  },
+
+  "settingsTitle": "Settings",
+  "@settingsTitle": {
+    "description": "Settings screen title"
+  },
+
+  "switchTheme": "Switch Theme",
+  "@switchTheme": {
+    "description": "Switch theme button text"
+  },
+
+  "switchLanguage": "Switch Language",
+  "@switchLanguage": {
+    "description": "Switch language button text"
+  },
+
+  "currentTheme": "Current Theme: {themeName}",
+  "@currentTheme": {
+    "description": "Current theme display",
+    "placeholders": {
+      "themeName": {
+        "type": "String",
+        "example": "Classic"
+      }
+    }
+  },
+
+  "classicTheme": "Classic",
+  "@classicTheme": {
+    "description": "Classic theme name"
+  },
+
+  "darkTheme": "Dark",
+  "@darkTheme": {
+    "description": "Dark theme name"
+  },
+
+  "oceanTheme": "Ocean",
+  "@oceanTheme": {
+    "description": "Ocean theme name"
+  },
+
+  "forrestTheme": "Forest",
+  "@forrestTheme": {
+    "description": "Forest theme name"
+  },
+
+  "desertTheme": "Desert",
+  "@desertTheme": {
+    "description": "Desert theme name"
+  },
+
+  "mochaMousseTheme": "Mocha Mousse",
+  "@mochaMousseTheme": {
+    "description": "Mocha Mousse theme name"
+  },
+
+  "unknownTheme": "Unknown Theme",
+  "@unknownTheme": {
+    "description": "Unknown theme fallback"
+  }
+}

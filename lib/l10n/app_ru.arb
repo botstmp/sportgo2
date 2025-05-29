@@ -1,0 +1,446 @@
+{
+  "@@locale": "ru",
+  "@@last_modified": "2024-12-19T12:00:00.000Z",
+
+  "appTitle": "SportGo2",
+  "@appTitle": {
+    "description": "Название приложения"
+  },
+
+  "selectTimer": "Выберите тип тренировки",
+  "@selectTimer": {
+    "description": "Заголовок главного экрана для выбора типа тренировки"
+  },
+
+  "start": "СТАРТ",
+  "@start": {
+    "description": "Текст кнопки старт"
+  },
+
+  "startWorkout": "Начать тренировку",
+  "@startWorkout": {
+    "description": "Текст кнопки начала тренировки"
+  },
+
+  "stop": "СТОП",
+  "@stop": {
+    "description": "Текст кнопки стоп"
+  },
+
+  "pause": "ПАУЗА",
+  "@pause": {
+    "description": "Текст кнопки пауза"
+  },
+
+  "resume": "ПРОДОЛЖИТЬ",
+  "@resume": {
+    "description": "Текст кнопки продолжить"
+  },
+
+  "finish": "ФИНИШ",
+  "@finish": {
+    "description": "Текст кнопки финиш"
+  },
+
+  "complete": "ЗАВЕРШИТЬ",
+  "@complete": {
+    "description": "Текст кнопки завершить"
+  },
+
+  "done": "ГОТОВО",
+  "@done": {
+    "description": "Текст кнопки готово"
+  },
+
+  "back": "Назад",
+  "@back": {
+    "description": "Текст кнопки назад"
+  },
+
+  "yes": "Да",
+  "@yes": {
+    "description": "Текст кнопки да"
+  },
+
+  "no": "Нет",
+  "@no": {
+    "description": "Текст кнопки нет"
+  },
+
+  "select": "Выбрать",
+  "@select": {
+    "description": "Текст кнопки выбрать"
+  },
+
+  "minutes": "Минуты",
+  "@minutes": {
+    "description": "Подпись минуты"
+  },
+
+  "seconds": "Секунды",
+  "@seconds": {
+    "description": "Подпись секунды"
+  },
+
+  "hours": "Часы",
+  "@hours": {
+    "description": "Подпись часы"
+  },
+
+  "round": "Раунд",
+  "@round": {
+    "description": "Подпись раунд"
+  },
+
+  "lap": "Отсечка",
+  "@lap": {
+    "description": "Подпись времени отсечки"
+  },
+
+  "lapTime": "Время отсечки",
+  "@lapTime": {
+    "description": "Время отсечки"
+  },
+
+  "totalTime": "Общее время",
+  "@totalTime": {
+    "description": "Подпись общего времени"
+  },
+
+  "remainingTime": "Осталось времени",
+  "@remainingTime": {
+    "description": "Подпись оставшегося времени"
+  },
+
+  "restTime": "Время отдыха",
+  "@restTime": {
+    "description": "Подпись времени отдыха"
+  },
+
+  "rest": "ОТДЫХ",
+  "@rest": {
+    "description": "Состояние отдыха"
+  },
+
+  "roundDuration": "Длительность раунда",
+  "@roundDuration": {
+    "description": "Длительность раунда"
+  },
+
+  "roundsCount": "Количество раундов",
+  "@roundsCount": {
+    "description": "Количество раундов"
+  },
+
+  "timeFormatHint": "часы : минуты : секунды",
+  "@timeFormatHint": {
+    "description": "Подсказка формата времени"
+  },
+
+  "classicTitle": "Классический секундомер",
+  "@classicTitle": {
+    "description": "Название классического таймера"
+  },
+
+  "classicSubtitle": "Произвольная тренировка",
+  "@classicSubtitle": {
+    "description": "Подзаголовок классического таймера"
+  },
+
+  "classicDescription": "Простой секундомер с отсечками времени. Идеально подходит для свободных тренировок, где вы сами контролируете темп.",
+  "@classicDescription": {
+    "description": "Описание классического таймера"
+  },
+
+  "interval1Title": "Интервальный таймер",
+  "@interval1Title": {
+    "description": "Название интервального таймера"
+  },
+
+  "interval1Subtitle": "Раунды с отдыхом",
+  "@interval1Subtitle": {
+    "description": "Подзаголовок интервального таймера"
+  },
+
+  "interval1Description": "Установите количество раундов и время отдыха. Отлично подходит для круговых тренировок и интервальных занятий.",
+  "@interval1Description": {
+    "description": "Описание интервального таймера"
+  },
+
+  "interval2Title": "Таймер с фиксированными раундами",
+  "@interval2Title": {
+    "description": "Название таймера с фиксированными раундами"
+  },
+
+  "interval2Subtitle": "Время работы + отдых",
+  "@interval2Subtitle": {
+    "description": "Подзаголовок таймера с фиксированными раундами"
+  },
+
+  "interval2Description": "Установите точную продолжительность для периодов работы и отдыха. Идеально для структурированных тренировок типа Табата.",
+  "@interval2Description": {
+    "description": "Описание таймера с фиксированными раундами"
+  },
+
+  "intensiveTitle": "Интенсивный таймер",
+  "@intensiveTitle": {
+    "description": "Название интенсивного таймера"
+  },
+
+  "intensiveSubtitle": "На пределе возможностей",
+  "@intensiveSubtitle": {
+    "description": "Подзаголовок интенсивного таймера"
+  },
+
+  "intensiveDescription": "Установите временной лимит и посмотрите, сколько раундов вы сможете выполнить. Отлично для проверки своих границ.",
+  "@intensiveDescription": {
+    "description": "Описание интенсивного таймера"
+  },
+
+  "intensiveWorkout": "Интенсивная тренировка",
+  "@intensiveWorkout": {
+    "description": "Интенсивная тренировка"
+  },
+
+  "noRestTitle": "Раунды без отдыха",
+  "@noRestTitle": {
+    "description": "Название таймера без отдыха"
+  },
+
+  "noRestSubtitle": "Непрерывные раунды",
+  "@noRestSubtitle": {
+    "description": "Подзаголовок таймера без отдыха"
+  },
+
+  "noRestDescription": "Установите количество раундов без периодов отдыха. Вы сами контролируете, когда заканчивается каждый раунд.",
+  "@noRestDescription": {
+    "description": "Описание таймера без отдыха"
+  },
+
+  "noRestRounds": "Раунды без отдыха",
+  "@noRestRounds": {
+    "description": "Раунды без отдыха"
+  },
+
+  "countdownTitle": "Обратный отсчет",
+  "@countdownTitle": {
+    "description": "Название таймера обратного отсчета"
+  },
+
+  "countdownSubtitle": "Отсчет до нуля",
+  "@countdownSubtitle": {
+    "description": "Подзаголовок таймера обратного отсчета"
+  },
+
+  "countdownDescription": "Установите конкретное время и ведите обратный отсчет до нуля. Идеально для временных вызовов.",
+  "@countdownDescription": {
+    "description": "Описание таймера обратного отсчета"
+  },
+
+  "enterData": "Введите данные",
+  "@enterData": {
+    "description": "Введите данные"
+  },
+
+  "invalidTime": "Введите корректное время",
+  "@invalidTime": {
+    "description": "Сообщение о некорректном времени"
+  },
+
+  "confirmEnd": "Вы уверены? Данные не будут сохранены.",
+  "@confirmEnd": {
+    "description": "Подтверждение завершения без сохранения"
+  },
+
+  "saveWorkoutPrompt": "Сохранить эту тренировку в историю?",
+  "@saveWorkoutPrompt": {
+    "description": "Запрос на сохранение тренировки"
+  },
+
+  "workoutSaved": "Тренировка сохранена!",
+  "@workoutSaved": {
+    "description": "Подтверждение сохранения тренировки"
+  },
+
+  "workoutAlreadySaved": "Тренировка уже сохранена",
+  "@workoutAlreadySaved": {
+    "description": "Сообщение о том, что тренировка уже сохранена"
+  },
+
+  "saveWorkout": "Сохранить тренировку",
+  "@saveWorkout": {
+    "description": "Кнопка сохранения тренировки"
+  },
+
+  "shareReport": "Поделиться отчетом",
+  "@shareReport": {
+    "description": "Кнопка поделиться отчетом"
+  },
+
+  "viewHistory": "Посмотреть историю",
+  "@viewHistory": {
+    "description": "Кнопка просмотра истории"
+  },
+
+  "workoutReport": "Отчет о тренировке",
+  "@workoutReport": {
+    "description": "Заголовок отчета о тренировке"
+  },
+
+  "report": "Отчет",
+  "@report": {
+    "description": "Отчет"
+  },
+
+  "summaryReport": "Сводный отчет",
+  "@summaryReport": {
+    "description": "Заголовок сводного отчета"
+  },
+
+  "myWorkoutReport": "Мой отчет о тренировке",
+  "@myWorkoutReport": {
+    "description": "Заголовок для поделиться отчетом"
+  },
+
+  "stopwatch": "Секундомер",
+  "@stopwatch": {
+    "description": "Секундомер"
+  },
+
+  "pauseWorkout": "Приостановить тренировку",
+  "@pauseWorkout": {
+    "description": "Приостановить тренировку"
+  },
+
+  "resumeWorkout": "Возобновить тренировку",
+  "@resumeWorkout": {
+    "description": "Возобновить тренировку"
+  },
+
+  "finishWorkout": "Завершить тренировку",
+  "@finishWorkout": {
+    "description": "Завершить тренировку"
+  },
+
+  "finishRound": "Завершить раунд",
+  "@finishRound": {
+    "description": "Завершить раунд"
+  },
+
+  "waitingRest": "Ожидание отдыха",
+  "@waitingRest": {
+    "description": "Ожидание отдыха"
+  },
+
+  "roundNumber": "Раунд {number}",
+  "@roundNumber": {
+    "description": "Номер раунда",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "1"
+      }
+    }
+  },
+
+  "roundProgress": "Раунд {current} из {total}",
+  "@roundProgress": {
+    "description": "Прогресс раундов",
+    "placeholders": {
+      "current": {
+        "type": "int",
+        "example": "1"
+      },
+      "total": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+
+  "version": "Версия",
+  "@version": {
+    "description": "Версия"
+  },
+
+  "developer": "Разработчик",
+  "@developer": {
+    "description": "Разработчик"
+  },
+
+  "description": "Описание",
+  "@description": {
+    "description": "Описание"
+  },
+
+  "contacts": "Контакты",
+  "@contacts": {
+    "description": "Контакты"
+  },
+
+  "aboutDescription": "Современное приложение для кроссфит тренировок с множественными режимами таймера. Создано для спортсменов, которые хотят эффективно отслеживать свои тренировки.",
+  "@aboutDescription": {
+    "description": "Описание приложения в разделе О программе"
+  },
+
+  "settingsTitle": "Настройки",
+  "@settingsTitle": {
+    "description": "Заголовок настроек"
+  },
+
+  "switchTheme": "Сменить тему",
+  "@switchTheme": {
+    "description": "Кнопка смены темы"
+  },
+
+  "switchLanguage": "Сменить язык",
+  "@switchLanguage": {
+    "description": "Кнопка смены языка"
+  },
+
+  "currentTheme": "Текущая тема: {themeName}",
+  "@currentTheme": {
+    "description": "Текущая тема",
+    "placeholders": {
+      "themeName": {
+        "type": "String",
+        "example": "Классическая"
+      }
+    }
+  },
+
+  "classicTheme": "Классическая",
+  "@classicTheme": {
+    "description": "Название классической темы"
+  },
+
+  "darkTheme": "Темная",
+  "@darkTheme": {
+    "description": "Название темной темы"
+  },
+
+  "oceanTheme": "Океанская",
+  "@oceanTheme": {
+    "description": "Название океанской темы"
+  },
+
+  "forrestTheme": "Лесная",
+  "@forrestTheme": {
+    "description": "Название лесной темы"
+  },
+
+  "desertTheme": "Пустынная",
+  "@desertTheme": {
+    "description": "Название пустынной темы"
+  },
+
+  "mochaMousseTheme": "Мокко Мусс",
+  "@mochaMousseTheme": {
+    "description": "Название темы Мокко Мусс"
+  },
+
+  "unknownTheme": "Неизвестная тема",
+  "@unknownTheme": {
+    "description": "Неизвестная тема"
+  }
+}

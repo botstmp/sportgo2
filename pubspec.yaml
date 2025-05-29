@@ -1,0 +1,76 @@
+name: sportgo2
+description: "Modern CrossFit Timer App with multiple workout modes"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management
+  provider: ^6.1.1
+
+  # Storage & Data
+  shared_preferences: ^2.2.2
+
+  # Audio
+  audioplayers: ^5.2.1
+
+  # Social Features
+  share_plus: ^7.2.2
+
+  # System Integration
+  wakelock_plus: ^1.2.5
+
+  # Internationalization
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+# Flutter configuration
+flutter:
+  uses-material-design: true
+
+  # Генерация локализации
+  generate: true
+
+  assets:
+    - assets/images/
+    - assets/sounds/
+    - assets/fonts/
+
+  fonts:
+    # Основной шрифт для заголовков
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+        - asset: assets/fonts/Poppins-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Poppins-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700
+
+    # Шрифт для основного текста
+    - family: OpenSans
+      fonts:
+        - asset: assets/fonts/OpenSans-Regular.ttf
+        - asset: assets/fonts/OpenSans-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/OpenSans-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/OpenSans-Bold.ttf
+          weight: 700
+
+    # Специальный шрифт для таймера
+    - family: BebasNeue
+      fonts:
+        - asset: assets/fonts/BebasNeue-Regular.ttf
