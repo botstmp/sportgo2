@@ -98,7 +98,7 @@ abstract class AppLocalizations {
   /// The title of the application
   ///
   /// In en, this message translates to:
-  /// **'SportGo2'**
+  /// **'SportOn'**
   String get appTitle;
 
   /// Main screen title for selecting workout type
@@ -530,7 +530,7 @@ abstract class AppLocalizations {
   /// About app description
   ///
   /// In en, this message translates to:
-  /// **'Modern CrossFit timer app with multiple workout modes. Designed for athletes who want to efficiently track their workouts.'**
+  /// **'SportOn - modern CrossFit timer app with multiple workout modes. Turn your workout ON and achieve your fitness goals!'**
   String get aboutDescription;
 
   /// Settings screen title

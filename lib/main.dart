@@ -1,32 +1,36 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
-import 'dart:developer' as developer;
 
-// Core imports
+// Импорты сервисов
 import 'core/services/storage_service.dart';
+
+// Импорты провайдеров
 import 'core/providers/theme_provider.dart';
+import 'core/providers/timer_provider.dart';
 
-// Feature imports
-import 'features/timers/screens/main_menu_screen.dart';
-
-// Localization imports
+// Импорты локализации
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/generated/app_localizations.dart';
 
-/// Главная функция приложения
+// Импорты экранов
+import 'features/timers/screens/main_menu_screen.dart';
+
 void main() async {
-  // Инициализация Flutter framework
+  // Убеждаемся, что Flutter инициализирован
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Настройка ориентации экрана (только портретная)
+  // Инициализация сервисов перед запуском приложения
+  await StorageService.initialize();
+
+  // Настройка системных UI
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
 
-  // Настройка системного UI
+  // Настройка системной панели
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -36,170 +40,106 @@ void main() async {
     ),
   );
 
-  // Инициализация сервисов
-  try {
-    await StorageService.init();
-    developer.log('SportGo2 services initialized successfully');
-  } catch (e) {
-    developer.log('Failed to initialize services: $e', level: 900);
-  }
-
-  // Запуск приложения
-  runApp(const SportGoApp());
+  runApp(const SportOnApp());
 }
 
-/// Главный виджет приложения
-class SportGoApp extends StatelessWidget {
-  const SportGoApp({super.key});
+/// Главный виджет приложения SportOn
+class SportOnApp extends StatelessWidget {
+  const SportOnApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // Провайдер тем и локализации
+        // Провайдер тем и языка
         ChangeNotifierProvider(
-          create: (_) => ThemeProvider(),
+          create: (context) => ThemeProvider()..initialize(),
+        ),
+
+        // Провайдер таймеров
+        ChangeNotifierProvider(
+          create: (context) => TimerProvider(),
         ),
 
         // Здесь будут добавлены другие провайдеры:
-        // - WorkoutProvider для управления тренировками
-        // - HistoryProvider для истории тренировок
-        // - SettingsProvider для настроек приложения
+        // - WorkoutProvider (управление тренировками)
+        // - HistoryProvider (управление историей)
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
           return MaterialApp(
-            // === ОСНОВНЫЕ НАСТРОЙКИ ===
-            title: 'SportGo2',
+            // === ОСНОВНЫЕ НАСТРОЙКИ ПРИЛОЖЕНИЯ ===
+            title: 'SportOn',
             debugShowCheckedModeBanner: false,
 
-            // === ТЕМЫ ===
-            theme: themeProvider.currentTheme,
-            darkTheme: themeProvider.isDarkTheme
-                ? themeProvider.currentTheme
-                : null,
-            themeMode: themeProvider.themeMode,
-
-            // === ЛОКАЛИЗАЦИЯ ===
+            // === НАСТРОЙКИ ЛОКАЛИЗАЦИИ ===
             locale: themeProvider.currentLocale,
-            supportedLocales: const [
-              Locale('en', ''), // English
-              Locale('ru', ''), // Русский
-            ],
             localizationsDelegates: const [
               AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            localeResolutionCallback: (deviceLocale, supportedLocales) {
-              // Если язык устройства поддерживается, используем его
-              if (deviceLocale != null) {
-                for (var supportedLocale in supportedLocales) {
-                  if (deviceLocale.languageCode == supportedLocale.languageCode) {
-                    return supportedLocale;
-                  }
-                }
-              }
+            supportedLocales: const [
+              Locale('en'), // Английский
+              Locale('ru'), // Русский
+            ],
 
-              // Иначе используем английский по умолчанию
-              return supportedLocales.first;
-            },
+            // === НАСТРОЙКИ ТЕМЫ ===
+            // Настройка темы на основе текущих настроек
+            theme: themeProvider.currentTheme,
+            darkTheme: themeProvider.currentTheme, // Используем ту же тему
+            themeMode: themeProvider.isDarkTheme ? ThemeMode.dark : ThemeMode.light,
 
             // === НАВИГАЦИЯ ===
             home: const MainMenuScreen(),
 
-            // === ОБРАБОТКА ОШИБОК ===
-            builder: (context, child) {
-              // Обработка ошибок рендеринга
-              ErrorWidget.builder = (FlutterErrorDetails errorDetails) {
-                return _buildErrorWidget(context, errorDetails);
-              };
-
-              return child ?? const SizedBox.shrink();
+            // Настройки роутов (будут добавлены позже)
+            routes: {
+              '/main': (context) => const MainMenuScreen(),
+              // Здесь будут добавлены другие маршруты:
+              // '/timer_setup': (context) => const TimerSetupScreen(),
+              // '/classic_timer': (context) => const ClassicTimerScreen(),
+              // '/history': (context) => const HistoryScreen(),
+              // '/settings': (context) => const SettingsScreen(),
             },
 
-            // === ДОПОЛНИТЕЛЬНЫЕ НАСТРОЙКИ ===
-            // Отключаем баннер режима отладки
-            debugShowMaterialGrid: false,
+            // === ОБРАБОТКА НАВИГАЦИИ ===
+            onGenerateRoute: (settings) {
+              // Кастомная обработка маршрутов (при необходимости)
+              switch (settings.name) {
+                case '/':
+                  return MaterialPageRoute(
+                    builder: (context) => const MainMenuScreen(),
+                  );
+                default:
+                  return MaterialPageRoute(
+                    builder: (context) => const MainMenuScreen(),
+                  );
+              }
+            },
 
-            // Настройки для web-версии (если планируется)
-            // useInheritedMediaQuery: true,
+            // === ОБРАБОТКА НЕИЗВЕСТНЫХ МАРШРУТОВ ===
+            onUnknownRoute: (settings) {
+              return MaterialPageRoute(
+                builder: (context) => const MainMenuScreen(),
+              );
+            },
+
+            // === НАСТРОЙКИ ПРОИЗВОДИТЕЛЬНОСТИ ===
+            builder: (context, child) {
+              // Можно добавить обертки для всего приложения
+              return MediaQuery(
+                // Отключаем масштабирование текста системой
+                data: MediaQuery.of(context).copyWith(
+                  textScaleFactor: 1.0,
+                ),
+                child: child!,
+              );
+            },
           );
         },
       ),
     );
   }
-
-  /// Виджет для отображения ошибок
-  Widget _buildErrorWidget(BuildContext context, FlutterErrorDetails errorDetails) {
-    developer.log(
-      'UI Error: ${errorDetails.exception}',
-      error: errorDetails.exception,
-      stackTrace: errorDetails.stack,
-      level: 1000,
-    );
-
-    return Material(
-      child: Container(
-        color: Colors.red.shade50,
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red.shade400,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Oops! Something went wrong',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.red.shade700,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Please restart the app or contact support if the problem persists.',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.red.shade600,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            if (kDebugMode) ...[
-              Text(
-                'Debug Info:',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red.shade500,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                errorDetails.exception.toString(),
-                style: TextStyle(
-                  fontSize: 10,
-                  color: Colors.red.shade500,
-                  fontFamily: 'monospace',
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
 }
-
-/// Константа для проверки режима отладки
-const bool kDebugMode = bool.fromEnvironment('dart.vm.product') == false;

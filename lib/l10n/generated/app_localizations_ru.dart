@@ -1,5 +1,3 @@
-// ignore: unused_import
-import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -9,7 +7,7 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
-  String get appTitle => 'SportGo2';
+  String get appTitle => 'SportOn';
 
   @override
   String get selectTimer => 'Выберите тип тренировки';
@@ -229,7 +227,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get contacts => 'Контакты';
 
   @override
-  String get aboutDescription => 'Современное приложение для кроссфит тренировок с множественными режимами таймера. Создано для спортсменов, которые хотят эффективно отслеживать свои тренировки.';
+  String get aboutDescription => 'SportOn - современное приложение для кроссфит тренировок с множественными режимами таймера. Включи режим тренировки и достигай своих целей!';
 
   @override
   String get settingsTitle => 'Настройки';

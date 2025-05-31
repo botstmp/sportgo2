@@ -1,114 +1,49 @@
 // lib/core/constants/ui_config.dart
 import 'package:flutter/material.dart';
 
-/// Централизованная конфигурация UI компонентов
-/// Все размеры рассчитываются относительно размера экрана для адаптивности
+/// Конфигурация пользовательского интерфейса SportOn
+/// Содержит константы для адаптивной верстки и размеров элементов
 class UIConfig {
-  UIConfig._(); // Приватный конструктор для статического класса
+  UIConfig._(); // Приватный конструктор для предотвращения создания экземпляров
 
-  // === TOOLBAR (Шапка приложения) ===
-  /// Высота тулбара относительно высоты экрана
-  /// Пример: при высоте 873px = ~130px
-  static const double toolbarHeightFactor = 0.15;
-
-  /// Высота логотипа в тулбаре относительно высоты экрана
-  /// Пример: при высоте 873px = ~110px
-  static const double toolbarImageHeightFactor = 0.125;
-
-  // === КОНТЕЙНЕРЫ И ОТСТУПЫ ===
-  /// Внешний отступ основного контейнера от краев экрана
-  /// Пример: при ширине 393px = ~16px
+  // === РАЗМЕРЫ КОНТЕЙНЕРОВ ===
   static const double containerOuterPaddingFactor = 0.04;
-
-  /// Внутренний отступ внутри контейнеров
-  /// Пример: при ширине 393px = ~16px
   static const double containerInnerPaddingFactor = 0.04;
-
-  /// Радиус закругления углов контейнеров
-  /// Пример: при ширине 393px = ~16px
   static const double containerBorderRadiusFactor = 0.04;
 
-  // === ТИПОГРАФИКА ===
-  /// Отступ сверху от заголовков
-  /// Пример: при высоте 873px = ~20px
-  static const double titleTopSpacingFactor = 0.01;
+  // === РАЗМЕРЫ КНОПОК ===
+  static const double primaryButtonHeightFactor = 0.065;
+  static const double buttonBorderRadiusFactor = 0.025;
+  static const double buttonHorizontalPaddingFactor = 0.06;
+  static const double buttonIconTextSpacingFactor = 0.02;
 
-  /// Размер основного заголовка
-  /// Пример: при высоте 873px = ~26px
-  static const double titleFontSizeFactor = 0.03;
+  // === РАЗМЕРЫ ШРИФТОВ ===
+  static const double titleFontSizeFactor = 0.032;
+  static const double subtitleFontSizeFactor = 0.022;
+  static const double bodyFontSizeFactor = 0.018;
+  static const double buttonTextSizeFactor = 0.02;
 
-  /// Размер описания и обычного текста
-  /// Пример: при высоте 873px = ~16px
-  static const double descriptionFontSizeFactor = 0.018;
+  // === РАЗМЕРЫ ЭЛЕМЕНТОВ ИНТЕРФЕЙСА ===
+  static const double toolbarHeightFactor = 0.08;
+  static const double iconSizeFactor = 0.06;
+  static const double smallIconSizeFactor = 0.04;
 
-  /// Отступ между элементами списка
-  /// Пример: при высоте 873px = ~22px
-  static const double listDescriptionSpacingFactor = 0.025;
-
-  // === КНОПКИ ===
-  /// Высота основных кнопок (START, STOP и т.д.)
-  /// Пример: при высоте 873px = ~100px
-  static const double primaryButtonHeightFactor = 0.115;
-
-  /// Размер иконок в кнопках
-  /// Пример: при высоте 873px = ~29px
-  static const double buttonIconSizeFactor = 0.033;
-
-  /// Отступ между иконкой и текстом в кнопке
-  /// Пример: при ширине 393px = ~10px
-  static const double buttonIconTextSpacingFactor = 0.025;
-
-  /// Размер текста в кнопках
-  /// Пример: при высоте 873px = ~24px
-  static const double buttonTextSizeFactor = 0.028;
-
-  // === ВТОРИЧНЫЕ КНОПКИ ===
-  /// Размер квадратных кнопок (пауза, история и т.д.)
-  /// Пример: при высоте 873px = ~35px
-  static const double secondaryButtonSizeFactor = 0.04;
-
-  /// Размер иконок во вторичных кнопках
-  /// Пример: при высоте 873px = ~29px
-  static const double secondaryButtonIconSizeFactor = 0.033;
-
-  /// Радиус закругления вторичных кнопок (фиксированный)
-  static const double secondaryButtonBorderRadius = 9.0;
-
-  /// Отступ между вторичными кнопками
-  /// Пример: при ширине 393px = ~12px
-  static const double buttonSpacingFactor = 0.03;
-
-  // === ВЫПАДАЮЩИЕ СПИСКИ ===
-  /// Высота элементов в выпадающих списках
-  /// Пример: при высоте 873px = ~70px
-  static const double dropdownItemHeightFactor = 0.08;
-
-  /// Отступ сверху от выпадающего списка
-  /// Пример: при высоте 873px = ~30px
-  static const double dropdownTopSpacingFactor = 0.035;
-
-  /// Размер заголовка в выпадающем списке
-  /// Пример: при высоте 873px = ~18px
-  static const double dropdownTitleFontSizeFactor = 0.021;
-
-  /// Размер подзаголовка в выпадающем списке
-  /// Пример: при высоте 873px = ~12px
-  static const double dropdownSubtitleFontSizeFactor = 0.014;
+  // === ОТСТУПЫ И ИНТЕРВАЛЫ ===
+  static const double verticalSpacingFactor = 0.02;
+  static const double horizontalSpacingFactor = 0.04;
 
   // === АНИМАЦИИ ===
-  /// Стандартная длительность анимаций кнопок
-  static const Duration buttonAnimationDuration = Duration(milliseconds: 200);
+  static const int fastAnimationDuration = 200;
+  static const int normalAnimationDuration = 300;
+  static const int slowAnimationDuration = 500;
 
-  /// Стандартная длительность переходов между экранами
-  static const Duration screenTransitionDuration = Duration(milliseconds: 300);
+  // === РАЗМЕРЫ КАРТОЧЕК ===
+  static const double cardHeightFactor = 0.16;
+  static const double cardElevation = 4.0;
 
-  /// Длительность анимации подготовки к тренировке
-  static const Duration preparationAnimationDuration = Duration(milliseconds: 300);
-
-  // === СПЕЦИФИЧНЫЕ РАЗМЕРЫ ===
-  /// Толщина прогресс-бара в круговом таймере относительно ширины экрана
-  /// Пример: при ширине 393px = ~287px (весь фон круга)
-  static const double circularTimerStrokeWidthFactor = 0.73;
+  // === РАЗМЕРЫ ТАЙМЕРА ===
+  static const double timerCardHeightFactor = 0.25;
+  static const double timerProgressStrokeWidth = 8.0;
 
   /// Размер кругового таймера относительно ширины экрана
   /// Пример: при ширине 393px = ~314px
@@ -121,6 +56,10 @@ class UIConfig {
   /// Размер подсказки под временем в таймере
   /// Пример: при высоте 873px = ~13px
   static const double timerHintFontSizeFactor = 0.015;
+
+  // === РАЗМЕРЫ МОДАЛЬНЫХ ОКОН ===
+  static const double modalBottomSheetHeightFactor = 0.6;
+  static const double dialogWidthFactor = 0.85;
 
   // === ЦВЕТА (константы для темной/светлой темы) ===
   /// Прозрачность для оверлеев и теней

@@ -1,454 +1,521 @@
 // lib/core/services/storage_service.dart
-import 'dart:convert';
-import 'dart:developer' as developer;
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Модель тренировки для истории
-class WorkoutHistoryModel {
-  final String id;
-  final String timerType;
-  final DateTime date;
-  final List<int> roundTimes;
-  final int? restTime;
-  final int overallTime;
-  final Map<String, dynamic>? metadata;
-
-  const WorkoutHistoryModel({
-    required this.id,
-    required this.timerType,
-    required this.date,
-    required this.roundTimes,
-    this.restTime,
-    required this.overallTime,
-    this.metadata,
-  });
-
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'timerType': timerType,
-    'date': date.toIso8601String(),
-    'roundTimes': roundTimes,
-    'restTime': restTime,
-    'overallTime': overallTime,
-    'metadata': metadata,
-  };
-
-  factory WorkoutHistoryModel.fromJson(Map<String, dynamic> json) {
-    return WorkoutHistoryModel(
-      id: json['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
-      timerType: json['timerType'] ?? 'Unknown',
-      date: DateTime.parse(json['date']),
-      roundTimes: List<int>.from(json['roundTimes'] ?? []),
-      restTime: json['restTime'],
-      overallTime: json['overallTime'] ?? 0,
-      metadata: json['metadata'],
-    );
-  }
-
-  @override
-  String toString() => 'WorkoutHistory($timerType, $date, ${roundTimes.length} rounds)';
-}
-
-/// Централизованный сервис для работы с хранилищем
+/// Сервис для работы с локальным хранилищем SportOn
+/// Обеспечивает сохранение и загрузку пользовательских настроек
 class StorageService {
-  static const String _historyKey = 'training_history';
-  static const String _settingsKey = 'app_settings';
-  static const String _themeKey = 'theme_index';
-  static const String _localeKey = 'locale';
+  static StorageService? _instance;
+  static SharedPreferences? _preferences;
 
-  static SharedPreferences? _prefs;
+  // Singleton pattern
+  StorageService._internal();
+
+  factory StorageService() {
+    _instance ??= StorageService._internal();
+    return _instance!;
+  }
 
   /// Инициализация сервиса
-  static Future<void> init() async {
-    try {
-      _prefs = await SharedPreferences.getInstance();
-      developer.log('StorageService initialized successfully');
-    } catch (e) {
-      developer.log('Failed to initialize StorageService: $e', level: 900);
-      rethrow;
+  static Future<void> initialize() async {
+    _preferences = await SharedPreferences.getInstance();
+  }
+
+  /// Получить экземпляр SharedPreferences
+  SharedPreferences get _prefs {
+    if (_preferences == null) {
+      throw Exception('StorageService не инициализирован. Вызовите StorageService.initialize() сначала.');
     }
+    return _preferences!;
   }
 
-  /// Получение экземпляра SharedPreferences
-  static Future<SharedPreferences> get _instance async {
-    return _prefs ?? await SharedPreferences.getInstance();
-  }
+  // === МЕТОДЫ ДЛЯ РАБОТЫ СО СТРОКАМИ ===
 
-  // === ИСТОРИЯ ТРЕНИРОВОК ===
-
-  /// Сохранить тренировку в историю
-  static Future<bool> saveWorkout(WorkoutHistoryModel workout) async {
+  /// Сохранить строку
+  Future<bool> setString(String key, String value) async {
     try {
-      final prefs = await _instance;
-      final history = await getWorkoutHistory();
-
-      // Добавляем уникальный ID если его нет
-      final workoutWithId = WorkoutHistoryModel(
-        id: workout.id.isEmpty ? DateTime.now().millisecondsSinceEpoch.toString() : workout.id,
-        timerType: workout.timerType,
-        date: workout.date,
-        roundTimes: workout.roundTimes,
-        restTime: workout.restTime,
-        overallTime: workout.overallTime,
-        metadata: workout.metadata,
-      );
-
-      history.add(workoutWithId);
-
-      // Ограничиваем историю 100 записями
-      if (history.length > 100) {
-        history.removeRange(0, history.length - 100);
-      }
-
-      final historyJson = history.map((w) => jsonEncode(w.toJson())).toList();
-      final success = await prefs.setStringList(_historyKey, historyJson);
-
-      developer.log('Workout saved: ${workoutWithId.timerType} - $success');
-      return success;
+      return await _prefs.setString(key, value);
     } catch (e) {
-      developer.log('Failed to save workout: $e', level: 900);
+      print('Ошибка сохранения строки: $e');
       return false;
     }
   }
 
-  /// Получить историю тренировок
-  static Future<List<WorkoutHistoryModel>> getWorkoutHistory() async {
+  /// Получить строку
+  String? getString(String key) {
     try {
-      final prefs = await _instance;
-      final historyStrings = prefs.getStringList(_historyKey) ?? [];
-
-      final history = historyStrings
-          .map((historyString) {
-        try {
-          final json = jsonDecode(historyString) as Map<String, dynamic>;
-          return WorkoutHistoryModel.fromJson(json);
-        } catch (e) {
-          developer.log('Failed to parse workout history item: $e');
-          return null;
-        }
-      })
-          .where((workout) => workout != null)
-          .cast<WorkoutHistoryModel>()
-          .toList();
-
-      // Сортируем по дате (новые сверху)
-      history.sort((a, b) => b.date.compareTo(a.date));
-
-      developer.log('Loaded ${history.length} workout records');
-      return history;
+      return _prefs.getString(key);
     } catch (e) {
-      developer.log('Failed to load workout history: $e', level: 900);
-      return [];
+      print('Ошибка получения строки: $e');
+      return null;
     }
   }
 
-  /// Удалить тренировку из истории
-  static Future<bool> deleteWorkout(String workoutId) async {
+  // === МЕТОДЫ ДЛЯ РАБОТЫ С ЦЕЛЫМИ ЧИСЛАМИ ===
+
+  /// Сохранить целое число
+  Future<bool> setInt(String key, int value) async {
     try {
-      final history = await getWorkoutHistory();
-      history.removeWhere((workout) => workout.id == workoutId);
-
-      final prefs = await _instance;
-      final historyJson = history.map((w) => jsonEncode(w.toJson())).toList();
-      final success = await prefs.setStringList(_historyKey, historyJson);
-
-      developer.log('Workout deleted: $workoutId - $success');
-      return success;
+      return await _prefs.setInt(key, value);
     } catch (e) {
-      developer.log('Failed to delete workout: $e', level: 900);
+      print('Ошибка сохранения числа: $e');
       return false;
     }
   }
 
-  /// Очистить всю историю тренировок
-  static Future<bool> clearWorkoutHistory() async {
+  /// Получить целое число
+  int? getInt(String key) {
     try {
-      final prefs = await _instance;
-      final success = await prefs.remove(_historyKey);
-      developer.log('Workout history cleared: $success');
-      return success;
+      return _prefs.getInt(key);
     } catch (e) {
-      developer.log('Failed to clear workout history: $e', level: 900);
+      print('Ошибка получения числа: $e');
+      return null;
+    }
+  }
+
+  // === МЕТОДЫ ДЛЯ РАБОТЫ С ЧИСЛАМИ С ПЛАВАЮЩЕЙ ТОЧКОЙ ===
+
+  /// Сохранить число с плавающей точкой
+  Future<bool> setDouble(String key, double value) async {
+    try {
+      return await _prefs.setDouble(key, value);
+    } catch (e) {
+      print('Ошибка сохранения double: $e');
       return false;
     }
   }
 
-  /// Получить статистику тренировок
-  static Future<WorkoutStatsModel> getWorkoutStats() async {
+  /// Получить число с плавающей точкой
+  double? getDouble(String key) {
     try {
-      final history = await getWorkoutHistory();
-
-      if (history.isEmpty) {
-        return const WorkoutStatsModel();
-      }
-
-      final totalWorkouts = history.length;
-      final totalTime = history.fold<int>(0, (sum, workout) => sum + workout.overallTime);
-      final avgTime = totalTime ~/ totalWorkouts;
-
-      // Группировка по типам таймеров
-      final timerTypes = <String, int>{};
-      for (final workout in history) {
-        timerTypes[workout.timerType] = (timerTypes[workout.timerType] ?? 0) + 1;
-      }
-
-      // Статистика за последнюю неделю
-      final weekAgo = DateTime.now().subtract(const Duration(days: 7));
-      final recentWorkouts = history.where((w) => w.date.isAfter(weekAgo)).length;
-
-      return WorkoutStatsModel(
-        totalWorkouts: totalWorkouts,
-        totalTimeSeconds: totalTime,
-        averageTimeSeconds: avgTime,
-        timerTypeStats: timerTypes,
-        recentWorkoutsCount: recentWorkouts,
-        lastWorkoutDate: history.first.date,
-      );
+      return _prefs.getDouble(key);
     } catch (e) {
-      developer.log('Failed to calculate workout stats: $e', level: 900);
-      return const WorkoutStatsModel();
+      print('Ошибка получения double: $e');
+      return null;
     }
   }
 
-  // === НАСТРОЙКИ ТЕМЫ И ЯЗЫКА ===
+  // === МЕТОДЫ ДЛЯ РАБОТЫ С БУЛЕВЫМИ ЗНАЧЕНИЯМИ ===
 
-  /// Сохранить индекс темы
-  static Future<bool> saveThemeIndex(int themeIndex) async {
+  /// Сохранить булево значение
+  Future<bool> setBool(String key, bool value) async {
     try {
-      final prefs = await _instance;
-      return await prefs.setInt(_themeKey, themeIndex);
+      return await _prefs.setBool(key, value);
     } catch (e) {
-      developer.log('Failed to save theme index: $e', level: 900);
+      print('Ошибка сохранения bool: $e');
       return false;
     }
   }
 
-  /// Получить индекс темы
-  static Future<int> getThemeIndex() async {
+  /// Получить булево значение
+  bool? getBool(String key) {
     try {
-      final prefs = await _instance;
-      return prefs.getInt(_themeKey) ?? 0;
+      return _prefs.getBool(key);
     } catch (e) {
-      developer.log('Failed to load theme index: $e', level: 900);
-      return 0;
+      print('Ошибка получения bool: $e');
+      return null;
     }
   }
 
-  /// Сохранить код языка
-  static Future<bool> saveLocaleCode(String localeCode) async {
+  /// Получить булево значение с значением по умолчанию
+  bool getBoolWithDefault(String key, bool defaultValue) {
+    return getBool(key) ?? defaultValue;
+  }
+
+  // === МЕТОДЫ ДЛЯ РАБОТЫ СО СПИСКАМИ СТРОК ===
+
+  /// Сохранить список строк
+  Future<bool> setStringList(String key, List<String> value) async {
     try {
-      final prefs = await _instance;
-      return await prefs.setString(_localeKey, localeCode);
+      return await _prefs.setStringList(key, value);
     } catch (e) {
-      developer.log('Failed to save locale code: $e', level: 900);
+      print('Ошибка сохранения списка строк: $e');
       return false;
     }
   }
 
-  /// Получить код языка
-  static Future<String> getLocaleCode() async {
+  /// Получить список строк
+  List<String>? getStringList(String key) {
     try {
-      final prefs = await _instance;
-      return prefs.getString(_localeKey) ?? 'en';
+      return _prefs.getStringList(key);
     } catch (e) {
-      developer.log('Failed to load locale code: $e', level: 900);
-      return 'en';
+      print('Ошибка получения списка строк: $e');
+      return null;
     }
   }
 
-  // === ОБЩИЕ НАСТРОЙКИ ===
+  // === УНИВЕРСАЛЬНЫЕ МЕТОДЫ ===
 
-  /// Сохранить произвольную настройку
-  static Future<bool> setSetting(String key, dynamic value) async {
+  /// Проверить существование ключа
+  bool containsKey(String key) {
     try {
-      final prefs = await _instance;
-
-      if (value is String) {
-        return await prefs.setString(key, value);
-      } else if (value is int) {
-        return await prefs.setInt(key, value);
-      } else if (value is double) {
-        return await prefs.setDouble(key, value);
-      } else if (value is bool) {
-        return await prefs.setBool(key, value);
-      } else if (value is List<String>) {
-        return await prefs.setStringList(key, value);
-      } else {
-        return await prefs.setString(key, jsonEncode(value));
-      }
+      return _prefs.containsKey(key);
     } catch (e) {
-      developer.log('Failed to save setting $key: $e', level: 900);
+      print('Ошибка проверки ключа: $e');
       return false;
     }
   }
 
-  /// Получить произвольную настройку
-  static Future<T?> getSetting<T>(String key, [T? defaultValue]) async {
+  /// Удалить значение по ключу
+  Future<bool> remove(String key) async {
     try {
-      final prefs = await _instance;
-
-      if (T == String) {
-        return prefs.getString(key) as T? ?? defaultValue;
-      } else if (T == int) {
-        return prefs.getInt(key) as T? ?? defaultValue;
-      } else if (T == double) {
-        return prefs.getDouble(key) as T? ?? defaultValue;
-      } else if (T == bool) {
-        return prefs.getBool(key) as T? ?? defaultValue;
-      } else {
-        final stringValue = prefs.getString(key);
-        if (stringValue == null) return defaultValue;
-        return jsonDecode(stringValue) as T;
-      }
+      return await _prefs.remove(key);
     } catch (e) {
-      developer.log('Failed to load setting $key: $e', level: 900);
-      return defaultValue;
-    }
-  }
-
-  /// Удалить настройку
-  static Future<bool> removeSetting(String key) async {
-    try {
-      final prefs = await _instance;
-      return await prefs.remove(key);
-    } catch (e) {
-      developer.log('Failed to remove setting $key: $e', level: 900);
+      print('Ошибка удаления ключа: $e');
       return false;
     }
   }
 
   /// Очистить все данные
-  static Future<bool> clearAll() async {
+  Future<bool> clear() async {
     try {
-      final prefs = await _instance;
-      return await prefs.clear();
+      return await _prefs.clear();
     } catch (e) {
-      developer.log('Failed to clear all data: $e', level: 900);
+      print('Ошибка очистки хранилища: $e');
       return false;
     }
   }
 
-  // === УТИЛИТЫ ===
-
-  /// Экспорт всех данных
-  static Future<Map<String, dynamic>> exportAllData() async {
+  /// Получить все ключи
+  Set<String> getKeys() {
     try {
-      final history = await getWorkoutHistory();
-      final stats = await getWorkoutStats();
-      final themeIndex = await getThemeIndex();
-      final localeCode = await getLocaleCode();
-
-      return {
-        'version': '2.0.0',
-        'exportedAt': DateTime.now().toIso8601String(),
-        'workoutHistory': history.map((w) => w.toJson()).toList(),
-        'stats': {
-          'totalWorkouts': stats.totalWorkouts,
-          'totalTimeSeconds': stats.totalTimeSeconds,
-          'averageTimeSeconds': stats.averageTimeSeconds,
-          'timerTypeStats': stats.timerTypeStats,
-          'recentWorkoutsCount': stats.recentWorkoutsCount,
-          'lastWorkoutDate': stats.lastWorkoutDate?.toIso8601String(),
-        },
-        'settings': {
-          'themeIndex': themeIndex,
-          'localeCode': localeCode,
-        },
-      };
+      return _prefs.getKeys();
     } catch (e) {
-      developer.log('Failed to export data: $e', level: 900);
+      print('Ошибка получения ключей: $e');
+      return <String>{};
+    }
+  }
+
+  /// Перезагрузить данные из хранилища
+  Future<void> reload() async {
+    try {
+      await _prefs.reload();
+    } catch (e) {
+      print('Ошибка перезагрузки хранилища: $e');
+    }
+  }
+
+  // === СПЕЦИАЛЬНЫЕ МЕТОДЫ ДЛЯ ПРИЛОЖЕНИЯ ===
+
+  /// Сохранить настройки пользователя
+  Future<bool> saveUserSettings(Map<String, dynamic> settings) async {
+    try {
+      bool allSaved = true;
+
+      for (String key in settings.keys) {
+        final value = settings[key];
+
+        if (value is String) {
+          allSaved &= await setString(key, value);
+        } else if (value is int) {
+          allSaved &= await setInt(key, value);
+        } else if (value is double) {
+          allSaved &= await setDouble(key, value);
+        } else if (value is bool) {
+          allSaved &= await setBool(key, value);
+        } else if (value is List<String>) {
+          allSaved &= await setStringList(key, value);
+        }
+      }
+
+      return allSaved;
+    } catch (e) {
+      print('Ошибка сохранения настроек пользователя: $e');
+      return false;
+    }
+  }
+
+  /// Получить все настройки пользователя
+  Map<String, dynamic> getUserSettings() {
+    try {
+      final Map<String, dynamic> settings = {};
+      final keys = getKeys();
+
+      for (String key in keys) {
+        // Пытаемся получить значение в разных типах
+        final stringValue = getString(key);
+        final intValue = getInt(key);
+        final doubleValue = getDouble(key);
+        final boolValue = getBool(key);
+        final listValue = getStringList(key);
+
+        if (stringValue != null) {
+          settings[key] = stringValue;
+        } else if (intValue != null) {
+          settings[key] = intValue;
+        } else if (doubleValue != null) {
+          settings[key] = doubleValue;
+        } else if (boolValue != null) {
+          settings[key] = boolValue;
+        } else if (listValue != null) {
+          settings[key] = listValue;
+        }
+      }
+
+      return settings;
+    } catch (e) {
+      print('Ошибка получения настроек пользователя: $e');
       return {};
     }
   }
 
-  /// Импорт данных
-  static Future<bool> importAllData(Map<String, dynamic> data) async {
+  // === СПЕЦИАЛИЗИРОВАННЫЕ МЕТОДЫ ДЛЯ SPORTON ===
+
+  /// Сохранить настройки темы
+  Future<bool> saveThemeSettings(int themeIndex) async {
     try {
-      // Импорт истории тренировок
-      if (data.containsKey('workoutHistory')) {
-        final historyData = data['workoutHistory'] as List<dynamic>;
-        final history = historyData
-            .map((item) => WorkoutHistoryModel.fromJson(item as Map<String, dynamic>))
-            .toList();
-
-        final prefs = await _instance;
-        final historyJson = history.map((w) => jsonEncode(w.toJson())).toList();
-        await prefs.setStringList(_historyKey, historyJson);
-      }
-
-      // Импорт настроек
-      if (data.containsKey('settings')) {
-        final settings = data['settings'] as Map<String, dynamic>;
-
-        if (settings.containsKey('themeIndex')) {
-          await saveThemeIndex(settings['themeIndex'] as int);
-        }
-
-        if (settings.containsKey('localeCode')) {
-          await saveLocaleCode(settings['localeCode'] as String);
-        }
-      }
-
-      developer.log('Data imported successfully');
-      return true;
+      return await setInt('theme_index', themeIndex);
     } catch (e) {
-      developer.log('Failed to import data: $e', level: 900);
+      print('Ошибка сохранения настроек темы: $e');
       return false;
     }
   }
-}
 
-/// Модель статистики тренировок
-class WorkoutStatsModel {
-  final int totalWorkouts;
-  final int totalTimeSeconds;
-  final int averageTimeSeconds;
-  final Map<String, int> timerTypeStats;
-  final int recentWorkoutsCount;
-  final DateTime? lastWorkoutDate;
-
-  const WorkoutStatsModel({
-    this.totalWorkouts = 0,
-    this.totalTimeSeconds = 0,
-    this.averageTimeSeconds = 0,
-    this.timerTypeStats = const {},
-    this.recentWorkoutsCount = 0,
-    this.lastWorkoutDate,
-  });
-
-  String get formattedTotalTime {
-    final hours = totalTimeSeconds ~/ 3600;
-    final minutes = (totalTimeSeconds % 3600) ~/ 60;
-    return hours > 0 ? '${hours}h ${minutes}m' : '${minutes}m';
+  /// Получить настройки темы
+  int? getThemeSettings() {
+    try {
+      return getInt('theme_index');
+    } catch (e) {
+      print('Ошибка получения настроек темы: $e');
+      return null;
+    }
   }
 
-  String get formattedAverageTime {
-    final minutes = averageTimeSeconds ~/ 60;
-    final seconds = averageTimeSeconds % 60;
-    return '${minutes}m ${seconds}s';
+  /// Сохранить настройки языка
+  Future<bool> saveLanguageSettings(String languageCode) async {
+    try {
+      return await setString('language_code', languageCode);
+    } catch (e) {
+      print('Ошибка сохранения настроек языка: $e');
+      return false;
+    }
   }
 
-  /// Получение самого популярного типа таймера
-  String get mostUsedTimerType {
-    if (timerTypeStats.isEmpty) return 'None';
+  /// Получить настройки языка
+  String? getLanguageSettings() {
+    try {
+      return getString('language_code');
+    } catch (e) {
+      print('Ошибка получения настроек языка: $e');
+      return null;
+    }
+  }
 
-    var maxCount = 0;
-    var mostUsed = 'None';
+  /// Сохранить настройки тренировки
+  Future<bool> saveWorkoutSettings(Map<String, dynamic> settings) async {
+    try {
+      bool allSaved = true;
 
-    timerTypeStats.forEach((type, count) {
-      if (count > maxCount) {
-        maxCount = count;
-        mostUsed = type;
+      for (String key in settings.keys) {
+        final value = settings[key];
+        String workoutKey = 'workout_$key';
+
+        if (value is String) {
+          allSaved &= await setString(workoutKey, value);
+        } else if (value is int) {
+          allSaved &= await setInt(workoutKey, value);
+        } else if (value is double) {
+          allSaved &= await setDouble(workoutKey, value);
+        } else if (value is bool) {
+          allSaved &= await setBool(workoutKey, value);
+        }
       }
-    });
 
-    return mostUsed;
+      return allSaved;
+    } catch (e) {
+      print('Ошибка сохранения настроек тренировки: $e');
+      return false;
+    }
   }
 
-  /// Процент использования определенного типа таймера
-  double getTimerTypeUsagePercent(String timerType) {
-    if (totalWorkouts == 0) return 0.0;
-    final count = timerTypeStats[timerType] ?? 0;
-    return (count / totalWorkouts) * 100;
+  /// Получить настройки тренировки
+  Map<String, dynamic> getWorkoutSettings() {
+    try {
+      final Map<String, dynamic> workoutSettings = {};
+      final keys = getKeys();
+
+      for (String key in keys) {
+        if (key.startsWith('workout_')) {
+          String settingKey = key.substring(8); // Убираем 'workout_'
+
+          final stringValue = getString(key);
+          final intValue = getInt(key);
+          final doubleValue = getDouble(key);
+          final boolValue = getBool(key);
+
+          if (stringValue != null) {
+            workoutSettings[settingKey] = stringValue;
+          } else if (intValue != null) {
+            workoutSettings[settingKey] = intValue;
+          } else if (doubleValue != null) {
+            workoutSettings[settingKey] = doubleValue;
+          } else if (boolValue != null) {
+            workoutSettings[settingKey] = boolValue;
+          }
+        }
+      }
+
+      return workoutSettings;
+    } catch (e) {
+      print('Ошибка получения настроек тренировки: $e');
+      return {};
+    }
+  }
+
+  /// Сохранить результат тренировки
+  Future<bool> saveWorkoutResult(String workoutId, Map<String, dynamic> result) async {
+    try {
+      bool allSaved = true;
+
+      for (String key in result.keys) {
+        final value = result[key];
+        String resultKey = 'result_${workoutId}_$key';
+
+        if (value is String) {
+          allSaved &= await setString(resultKey, value);
+        } else if (value is int) {
+          allSaved &= await setInt(resultKey, value);
+        } else if (value is double) {
+          allSaved &= await setDouble(resultKey, value);
+        } else if (value is bool) {
+          allSaved &= await setBool(resultKey, value);
+        }
+      }
+
+      // Сохраняем ID тренировки в список
+      List<String> workoutIds = getStringList('workout_ids') ?? [];
+      if (!workoutIds.contains(workoutId)) {
+        workoutIds.add(workoutId);
+        allSaved &= await setStringList('workout_ids', workoutIds);
+      }
+
+      return allSaved;
+    } catch (e) {
+      print('Ошибка сохранения результата тренировки: $e');
+      return false;
+    }
+  }
+
+  /// Получить результаты всех тренировок
+  List<Map<String, dynamic>> getAllWorkoutResults() {
+    try {
+      List<String> workoutIds = getStringList('workout_ids') ?? [];
+      List<Map<String, dynamic>> results = [];
+
+      for (String workoutId in workoutIds) {
+        Map<String, dynamic> workoutResult = {'id': workoutId};
+        final keys = getKeys();
+
+        for (String key in keys) {
+          if (key.startsWith('result_${workoutId}_')) {
+            String resultKey = key.substring('result_${workoutId}_'.length);
+
+            final stringValue = getString(key);
+            final intValue = getInt(key);
+            final doubleValue = getDouble(key);
+            final boolValue = getBool(key);
+
+            if (stringValue != null) {
+              workoutResult[resultKey] = stringValue;
+            } else if (intValue != null) {
+              workoutResult[resultKey] = intValue;
+            } else if (doubleValue != null) {
+              workoutResult[resultKey] = doubleValue;
+            } else if (boolValue != null) {
+              workoutResult[resultKey] = boolValue;
+            }
+          }
+        }
+
+        if (workoutResult.length > 1) { // Больше чем просто ID
+          results.add(workoutResult);
+        }
+      }
+
+      return results;
+    } catch (e) {
+      print('Ошибка получения результатов тренировок: $e');
+      return [];
+    }
+  }
+
+  /// Удалить результат тренировки
+  Future<bool> removeWorkoutResult(String workoutId) async {
+    try {
+      bool allRemoved = true;
+      final keys = getKeys();
+
+      // Удаляем все ключи связанные с тренировкой
+      for (String key in keys) {
+        if (key.startsWith('result_${workoutId}_')) {
+          allRemoved &= await remove(key);
+        }
+      }
+
+      // Удаляем ID из списка
+      List<String> workoutIds = getStringList('workout_ids') ?? [];
+      workoutIds.remove(workoutId);
+      allRemoved &= await setStringList('workout_ids', workoutIds);
+
+      return allRemoved;
+    } catch (e) {
+      print('Ошибка удаления результата тренировки: $e');
+      return false;
+    }
+  }
+
+  // === МЕТОДЫ ДЛЯ ОТЛАДКИ ===
+
+  /// Вывести все данные в консоль (для отладки)
+  void debugPrintAll() {
+    try {
+      final keys = getKeys();
+      print('=== StorageService Debug ===');
+      print('Всего ключей: ${keys.length}');
+
+      for (String key in keys) {
+        final value = getString(key) ??
+            getInt(key)?.toString() ??
+            getDouble(key)?.toString() ??
+            getBool(key)?.toString() ??
+            getStringList(key)?.toString() ??
+            'unknown';
+        print('$key: $value');
+      }
+      print('===========================');
+    } catch (e) {
+      print('Ошибка отладочного вывода: $e');
+    }
+  }
+
+  /// Получить статистику хранилища
+  Map<String, dynamic> getStorageStats() {
+    try {
+      final keys = getKeys();
+      int stringCount = 0;
+      int intCount = 0;
+      int doubleCount = 0;
+      int boolCount = 0;
+      int listCount = 0;
+
+      for (String key in keys) {
+        if (getString(key) != null) stringCount++;
+        else if (getInt(key) != null) intCount++;
+        else if (getDouble(key) != null) doubleCount++;
+        else if (getBool(key) != null) boolCount++;
+        else if (getStringList(key) != null) listCount++;
+      }
+
+      return {
+        'totalKeys': keys.length,
+        'stringValues': stringCount,
+        'intValues': intCount,
+        'doubleValues': doubleCount,
+        'boolValues': boolCount,
+        'listValues': listCount,
+      };
+    } catch (e) {
+      print('Ошибка получения статистики: $e');
+      return {};
+    }
   }
 }

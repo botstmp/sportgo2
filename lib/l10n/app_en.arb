@@ -2,7 +2,7 @@
   "@@locale": "en",
   "@@last_modified": "2024-12-19T12:00:00.000Z",
 
-  "appTitle": "SportGo2",
+  "appTitle": "SportOn",
   "@appTitle": {
     "description": "The title of the application"
   },
@@ -378,7 +378,7 @@
     "description": "Contacts label"
   },
 
-  "aboutDescription": "Modern CrossFit timer app with multiple workout modes. Designed for athletes who want to efficiently track their workouts.",
+  "aboutDescription": "SportOn - modern CrossFit timer app with multiple workout modes. Turn your workout ON and achieve your fitness goals!",
   "@aboutDescription": {
     "description": "About app description"
   },

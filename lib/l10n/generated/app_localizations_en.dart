@@ -1,5 +1,3 @@
-// ignore: unused_import
-import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -9,7 +7,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'SportGo2';
+  String get appTitle => 'SportOn';
 
   @override
   String get selectTimer => 'Select Workout Timer';
@@ -229,7 +227,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contacts => 'Contacts';
 
   @override
-  String get aboutDescription => 'Modern CrossFit timer app with multiple workout modes. Designed for athletes who want to efficiently track their workouts.';
+  String get aboutDescription => 'SportOn - modern CrossFit timer app with multiple workout modes. Turn your workout ON and achieve your fitness goals!';
 
   @override
   String get settingsTitle => 'Settings';
