@@ -187,6 +187,92 @@ class WorkoutHistoryService {
     }
   }
 
+  // === НОВЫЕ МЕТОДЫ ДЛЯ WORKOUTSELECTIONSCREEN ===
+
+  /// Получить недавние уникальные ключи тренировок (коды или названия)
+  Future<List<String>> getRecentWorkoutKeys({int limit = 5}) async {
+    try {
+      final allSessions = await getAllSessions();
+
+      // Фильтруем только привязанные тренировки
+      final linkedSessions = allSessions
+          .where((session) => session.isLinkedWorkout)
+          .toList();
+
+      if (linkedSessions.isEmpty) {
+        return [];
+      }
+
+      // Сортируем по дате (новые сначала)
+      linkedSessions.sort((a, b) => b.startTime.compareTo(a.startTime));
+
+      // Извлекаем уникальные ключи тренировок
+      final Set<String> uniqueKeys = {};
+      final List<String> recentKeys = [];
+
+      for (final session in linkedSessions) {
+        final key = session.workoutKey;
+        if (!uniqueKeys.contains(key)) {
+          uniqueKeys.add(key);
+          recentKeys.add(key);
+
+          // Ограничиваем количество
+          if (recentKeys.length >= limit) {
+            break;
+          }
+        }
+      }
+
+      print('✅ WorkoutHistoryService: Found ${recentKeys.length} recent workout keys');
+      return recentKeys;
+    } catch (e) {
+      print('❌ WorkoutHistoryService: Failed to get recent workout keys - $e');
+      return [];
+    }
+  }
+
+  /// Получить недавние уникальные ключи тренировок по типу таймера
+  Future<List<String>> getRecentWorkoutKeysByTimerType(TimerType timerType, {int limit = 5}) async {
+    try {
+      final sessionsByType = await getSessionsByTimerType(timerType);
+
+      // Фильтруем только привязанные тренировки
+      final linkedSessions = sessionsByType
+          .where((session) => session.isLinkedWorkout)
+          .toList();
+
+      if (linkedSessions.isEmpty) {
+        return [];
+      }
+
+      // Сортируем по дате (новые сначала)
+      linkedSessions.sort((a, b) => b.startTime.compareTo(a.startTime));
+
+      // Извлекаем уникальные ключи тренировок
+      final Set<String> uniqueKeys = {};
+      final List<String> recentKeys = [];
+
+      for (final session in linkedSessions) {
+        final key = session.workoutKey;
+        if (!uniqueKeys.contains(key)) {
+          uniqueKeys.add(key);
+          recentKeys.add(key);
+
+          // Ограничиваем количество
+          if (recentKeys.length >= limit) {
+            break;
+          }
+        }
+      }
+
+      print('✅ WorkoutHistoryService: Found ${recentKeys.length} recent workout keys for ${timerType.name}');
+      return recentKeys;
+    } catch (e) {
+      print('❌ WorkoutHistoryService: Failed to get recent workout keys by timer type - $e');
+      return [];
+    }
+  }
+
   // === СТАТИСТИКА И АНАЛИТИКА ===
 
   /// Получить общую статистику
@@ -414,7 +500,6 @@ class WorkoutOverallStats {
 }
 
 /// Статистика конкретной тренировки
-/// Статистика конкретной тренировки
 class WorkoutSpecificStats {
   final String workoutKey;
   final int totalAttempts;
@@ -465,14 +550,14 @@ class WorkoutSpecificStats {
       bestTime: bestTime,
       averageTime: averageTime,
       worstTime: worstTime,
-      firstAttempt: sessions.first.startTime,  // ИСПРАВЛЕНО: DateTime
-      lastAttempt: sessions.last.startTime,    // ИСПРАВЛЕНО: DateTime
+      firstAttempt: sessions.first.startTime,
+      lastAttempt: sessions.last.startTime,
       recentTimes: recentTimes,
     );
   }
 
   factory WorkoutSpecificStats.empty() {
-    final now = DateTime.now(); // ИСПРАВЛЕНО: Используем DateTime.now()
+    final now = DateTime.now();
 
     return WorkoutSpecificStats(
       workoutKey: '',
@@ -481,8 +566,8 @@ class WorkoutSpecificStats {
       bestTime: Duration.zero,
       averageTime: Duration.zero,
       worstTime: Duration.zero,
-      firstAttempt: now,          // ИСПРАВЛЕНО: DateTime
-      lastAttempt: now,           // ИСПРАВЛЕНО: DateTime
+      firstAttempt: now,
+      lastAttempt: now,
       recentTimes: const [],
     );
   }
