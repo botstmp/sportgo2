@@ -1,3 +1,5 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -64,7 +66,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get lap => 'Отсечка';
 
   @override
-  String get lapTime => 'Время отсечки';
+  String get lapTime => 'Отсечка';
 
   @override
   String get totalTime => 'Общее время';
@@ -263,4 +265,97 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get unknownTheme => 'Неизвестная тема';
+
+  @override
+  String get stopwatchTitle => 'Секундомер';
+
+  @override
+  String get stopwatchDescription => 'Классический секундомер с возможностью отсечек времени (раундов)';
+
+  @override
+  String get workTime => 'Время работы';
+
+  @override
+  String get work => 'Работа';
+
+  @override
+  String get totalWorkoutTime => 'Общее время тренировки';
+
+  @override
+  String get roundSingular => 'раунд';
+
+  @override
+  String get roundPlural => 'раунда';
+
+  @override
+  String get roundPluralMany => 'раундов';
+
+  @override
+  String get preparation => 'Подготовка';
+
+  @override
+  String get paused => 'Пауза';
+
+  @override
+  String get finished => 'Завершено';
+
+  @override
+  String get stopped => 'Остановлен';
+
+  @override
+  String get stopWorkoutQuestion => 'Остановить тренировку?';
+
+  @override
+  String get stopWorkoutMessage => 'Весь прогресс будет потерян';
+
+  @override
+  String get continue_ => 'Продолжить';
+
+  @override
+  String get totalWorkoutProgress => 'Прогресс тренировки';
+
+  @override
+  String get information => 'Информация';
+
+  @override
+  String get tapToPause => 'Нажмите для паузы';
+
+  @override
+  String get tapToContinue => 'Нажмите для продолжения';
+
+  @override
+  String get readyToStart => 'Готов к старту';
+
+  @override
+  String get workoutCompleted => '🎉 Тренировка завершена!';
+
+  @override
+  String get greatJob => 'Отличная работа! Вы успешно завершили тренировку.';
+
+  @override
+  String get workoutInformation => 'Информация о тренировке';
+
+  @override
+  String get currentRound => 'Текущий раунд';
+
+  @override
+  String get elapsedTime => 'Прошло времени';
+
+  @override
+  String get roundsLabel => 'Раунды';
+
+  @override
+  String get stopwatchMode => 'Режим секундомера';
+
+  @override
+  String get lapTimes => 'Отсечки времени';
+
+  @override
+  String get splitTime => 'Сплит';
+
+  @override
+  String get noLapTimes => 'Отсечки времени пока не записаны.\nНажмите кнопку флага для записи отсечек.';
+
+  @override
+  String get close => 'Закрыть';
 }

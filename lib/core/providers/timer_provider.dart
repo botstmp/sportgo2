@@ -2,26 +2,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../constants/ui_config.dart';
-
-/// Состояния таймера
-enum TimerState {
-  stopped,     // Остановлен
-  preparation, // Подготовка (обратный отсчет)
-  working,     // Рабочий период
-  resting,     // Период отдыха
-  paused,      // Пауза
-  finished,    // Завершен
-}
-
-/// Типы таймеров
-enum TimerType {
-  classic,     // Классический таймер
-  interval1,   // Интервальный 1
-  interval2,   // Интервальный 2
-  intensive,   // Интенсивный
-  norest,      // Без отдыха
-  countdown,   // Обратный отсчет
-}
+import '../enums/timer_enums.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 /// Провайдер для управления таймерами SportOn
 class TimerProvider with ChangeNotifier {
@@ -29,6 +11,7 @@ class TimerProvider with ChangeNotifier {
   Timer? _timer;
   TimerState _state = TimerState.stopped;
   TimerType _type = TimerType.classic;
+  AppLocalizations? _localizations;
 
   // Настройки таймера
   int _workDuration = 60;     // Время работы в секундах
@@ -45,6 +28,12 @@ class TimerProvider with ChangeNotifier {
   DateTime? _endTime;         // Время окончания тренировки
   int _totalWorkTime = 0;     // Общее время работы
   int _totalRestTime = 0;     // Общее время отдыха
+
+  // Отсечки времени для классического таймера
+  List<LapTime> _lapTimes = []; // Промежуточные результаты
+
+  // ДОБАВЛЕНО: Переменная для отслеживания состояния до паузы
+  TimerState? _stateBeforePause;
 
   // === ГЕТТЕРЫ ===
 
@@ -73,10 +62,26 @@ class TimerProvider with ChangeNotifier {
   int get totalTime => _totalTime;
 
   /// Прогресс текущего периода (0.0 - 1.0)
-  double get progress => _totalTime > 0 ? (_totalTime - _currentTime) / _totalTime : 0.0;
+  double get progress {
+    if (_type == TimerType.classic && _state == TimerState.working) {
+      // Для секундомера прогресс циклический каждую минуту
+      return (_currentTime % 60) / 60.0;
+    }
+
+    // Для всех остальных случаев (включая подготовку) - обратный отсчет
+    if (_totalTime <= 0) return 0.0;
+
+    // Прогресс от 1.0 (полный круг) до 0.0 (пустой)
+    return (_totalTime - _currentTime) / _totalTime;
+  }
 
   /// Прогресс всей тренировки (0.0 - 1.0)
   double get totalProgress {
+    if (_type == TimerType.classic) {
+      // Для секундомера показываем прогресс времени в часе
+      return (_currentTime % 3600) / 3600.0;
+    }
+
     if (_rounds == 0) return 0.0;
 
     double roundProgress = (_currentRound - 1) / _rounds;
@@ -103,6 +108,9 @@ class TimerProvider with ChangeNotifier {
   /// Общее время отдыха
   int get totalRestTime => _totalRestTime;
 
+  /// Список отсечек времени
+  List<LapTime> get lapTimes => List.unmodifiable(_lapTimes);
+
   /// Общая продолжительность тренировки
   Duration? get totalDuration {
     if (_startTime == null) return null;
@@ -118,20 +126,56 @@ class TimerProvider with ChangeNotifier {
   }
 
   /// Название текущего периода
-  String get currentPeriodName {
+  String getCurrentPeriodName(AppLocalizations l10n) {
     switch (_state) {
       case TimerState.preparation:
-        return 'Подготовка';
+        return l10n.preparation;
       case TimerState.working:
-        return 'Работа';
+        return l10n.work;
       case TimerState.resting:
-        return 'Отдых';
+        return l10n.rest;
       case TimerState.paused:
-        return 'Пауза';
+        return l10n.paused;
       case TimerState.finished:
-        return 'Завершено';
+        return l10n.finished;
       default:
-        return 'Остановлен';
+        return l10n.stopped;
+    }
+  }
+
+  /// Получить название типа таймера
+  String getTimerTypeName(AppLocalizations l10n) {
+    switch (_type) {
+      case TimerType.classic:
+        return l10n.stopwatchTitle;
+      case TimerType.interval1:
+        return l10n.interval1Title;
+      case TimerType.interval2:
+        return l10n.interval2Title;
+      case TimerType.intensive:
+        return l10n.intensiveTitle;
+      case TimerType.norest:
+        return l10n.noRestTitle;
+      case TimerType.countdown:
+        return l10n.countdownTitle;
+    }
+  }
+
+  /// Получить описание типа таймера
+  String getTimerTypeDescription(AppLocalizations l10n) {
+    switch (_type) {
+      case TimerType.classic:
+        return l10n.stopwatchDescription;
+      case TimerType.interval1:
+        return l10n.interval1Description;
+      case TimerType.interval2:
+        return l10n.interval2Description;
+      case TimerType.intensive:
+        return l10n.intensiveDescription;
+      case TimerType.norest:
+        return l10n.noRestDescription;
+      case TimerType.countdown:
+        return l10n.countdownDescription;
     }
   }
 
@@ -145,6 +189,12 @@ class TimerProvider with ChangeNotifier {
   bool get isFinished => _state == TimerState.finished;
 
   // === МЕТОДЫ НАСТРОЙКИ ===
+
+  /// Установить локализацию
+  void setLocalizations(AppLocalizations localizations) {
+    _localizations = localizations;
+    notifyListeners();
+  }
 
   /// Установить тип таймера
   void setTimerType(TimerType type) {
@@ -183,9 +233,9 @@ class TimerProvider with ChangeNotifier {
   void _applyTimerTypeDefaults() {
     switch (_type) {
       case TimerType.classic:
-        _workDuration = 60;
-        _restDuration = 30;
-        _rounds = 1;
+        _workDuration = 0;      // Для секундомера время не ограничено
+        _restDuration = 0;      // Без отдыха
+        _rounds = 1;            // Один "раунд"
         break;
       case TimerType.interval1:
         _workDuration = 45;
@@ -224,6 +274,9 @@ class TimerProvider with ChangeNotifier {
       _totalWorkTime = 0;
       _totalRestTime = 0;
       _currentRound = 1;
+      _lapTimes.clear(); // Очищаем предыдущие отсечки
+
+      // Всегда начинаем с подготовки
       _startPreparation();
     } else if (_state == TimerState.paused) {
       _resume();
@@ -242,8 +295,17 @@ class TimerProvider with ChangeNotifier {
   /// Запустить рабочий период
   void _startWorking() {
     _state = TimerState.working;
-    _currentTime = _workDuration;
-    _totalTime = _workDuration;
+
+    if (_type == TimerType.classic) {
+      // Для классического таймера (секундомер) - считаем вперед
+      _currentTime = 0;
+      _totalTime = 0; // Бесконечный отсчет
+    } else {
+      // Для интервальных таймеров - обратный отсчет
+      _currentTime = _workDuration;
+      _totalTime = _workDuration;
+    }
+
     _startTimer();
     notifyListeners();
   }
@@ -271,19 +333,27 @@ class TimerProvider with ChangeNotifier {
 
   /// Тик таймера
   void _tick() {
-    if (_currentTime > 0) {
-      _currentTime--;
-
-      // Обновляем статистику
-      if (_state == TimerState.working) {
-        _totalWorkTime++;
-      } else if (_state == TimerState.resting) {
-        _totalRestTime++;
-      }
-
+    if (_type == TimerType.classic && _state == TimerState.working) {
+      // Для классического таймера - считаем вперед
+      _currentTime++;
+      _totalWorkTime++;
       notifyListeners();
     } else {
-      _onPeriodComplete();
+      // Для интервальных таймеров И подготовки - обратный отсчет
+      if (_currentTime > 0) {
+        _currentTime--;
+
+        // Обновляем статистику
+        if (_state == TimerState.working) {
+          _totalWorkTime++;
+        } else if (_state == TimerState.resting) {
+          _totalRestTime++;
+        }
+
+        notifyListeners();
+      } else {
+        _onPeriodComplete();
+      }
     }
   }
 
@@ -322,15 +392,25 @@ class TimerProvider with ChangeNotifier {
   void pause() {
     if (isRunning) {
       _timer?.cancel();
+      // ДОБАВЛЕНО: Запоминаем состояние до паузы
+      _stateBeforePause = _state;
       _state = TimerState.paused;
       notifyListeners();
     }
   }
 
-  /// Возобновить
+  /// ИСПРАВЛЕННЫЙ МЕТОД: Возобновить
   void _resume() {
     if (_state == TimerState.paused) {
-      _state = _currentTime > 0 ? TimerState.working : TimerState.resting;
+      // ИСПРАВЛЕНО: Восстанавливаем состояние, которое было до паузы
+      if (_stateBeforePause != null) {
+        _state = _stateBeforePause!;
+        _stateBeforePause = null; // Очищаем после использования
+      } else {
+        // Fallback на старую логику (если что-то пошло не так)
+        _state = _currentTime > 0 ? TimerState.working : TimerState.resting;
+      }
+
       _startTimer();
       notifyListeners();
     }
@@ -344,6 +424,7 @@ class TimerProvider with ChangeNotifier {
     _totalTime = 0;
     _currentRound = 1;
     _endTime = null;
+    _stateBeforePause = null; // ДОБАВЛЕНО: Очищаем состояние до паузы
     notifyListeners();
   }
 
@@ -353,6 +434,7 @@ class TimerProvider with ChangeNotifier {
     _state = TimerState.finished;
     _endTime = DateTime.now();
     _currentTime = 0;
+    _stateBeforePause = null; // ДОБАВЛЕНО: Очищаем состояние до паузы
     notifyListeners();
   }
 
@@ -363,7 +445,22 @@ class TimerProvider with ChangeNotifier {
     _endTime = null;
     _totalWorkTime = 0;
     _totalRestTime = 0;
+    _lapTimes.clear();
     notifyListeners();
+  }
+
+  /// Добавить отсечку времени (для классического таймера)
+  void addLapTime() {
+    if (_type == TimerType.classic && _state == TimerState.working) {
+      final lapTime = LapTime(
+        lapNumber: _lapTimes.length + 1,
+        time: _currentTime,
+        formattedTime: formattedTime,
+        timestamp: DateTime.now(),
+      );
+      _lapTimes.add(lapTime);
+      notifyListeners();
+    }
   }
 
   // === МЕТОДЫ ДАННЫХ ===

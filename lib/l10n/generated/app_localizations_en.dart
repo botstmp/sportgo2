@@ -1,3 +1,5 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -64,7 +66,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lap => 'Lap';
 
   @override
-  String get lapTime => 'Lap Time';
+  String get lapTime => 'Lap';
 
   @override
   String get totalTime => 'Total Time';
@@ -263,4 +265,97 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unknownTheme => 'Unknown Theme';
+
+  @override
+  String get stopwatchTitle => 'Stopwatch';
+
+  @override
+  String get stopwatchDescription => 'Classic stopwatch with lap time capability (rounds)';
+
+  @override
+  String get workTime => 'Work Time';
+
+  @override
+  String get work => 'Work';
+
+  @override
+  String get totalWorkoutTime => 'Total Workout Time';
+
+  @override
+  String get roundSingular => 'round';
+
+  @override
+  String get roundPlural => 'rounds';
+
+  @override
+  String get roundPluralMany => 'rounds';
+
+  @override
+  String get preparation => 'Preparation';
+
+  @override
+  String get paused => 'Paused';
+
+  @override
+  String get finished => 'Finished';
+
+  @override
+  String get stopped => 'Stopped';
+
+  @override
+  String get stopWorkoutQuestion => 'Stop workout?';
+
+  @override
+  String get stopWorkoutMessage => 'All progress will be lost';
+
+  @override
+  String get continue_ => 'Continue';
+
+  @override
+  String get totalWorkoutProgress => 'Total workout progress';
+
+  @override
+  String get information => 'Information';
+
+  @override
+  String get tapToPause => 'Tap to pause';
+
+  @override
+  String get tapToContinue => 'Tap to continue';
+
+  @override
+  String get readyToStart => 'Ready to start';
+
+  @override
+  String get workoutCompleted => '🎉 Workout completed!';
+
+  @override
+  String get greatJob => 'Great job! You have successfully completed the workout.';
+
+  @override
+  String get workoutInformation => 'Workout Information';
+
+  @override
+  String get currentRound => 'Current round';
+
+  @override
+  String get elapsedTime => 'Elapsed time';
+
+  @override
+  String get roundsLabel => 'Rounds';
+
+  @override
+  String get stopwatchMode => 'Stopwatch Mode';
+
+  @override
+  String get lapTimes => 'Lap Times';
+
+  @override
+  String get splitTime => 'Split';
+
+  @override
+  String get noLapTimes => 'No lap times recorded yet.\nTap the flag button to record lap times.';
+
+  @override
+  String get close => 'Close';
 }

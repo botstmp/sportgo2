@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/timer_provider.dart';
+import '../../../core/providers/theme_provider.dart';
 import '../../../core/constants/ui_config.dart';
 import '../../../shared/themes/app_themes.dart';
 import '../../../shared/widgets/buttons/custom_buttons.dart';
@@ -9,6 +10,12 @@ import '../../../shared/widgets/inputs/custom_inputs.dart';
 import '../../../shared/widgets/animations/animated_widgets.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import 'classic_timer_screen.dart';
+
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+// import '../../../core/providers/settings_provider.dart';
+import '../../../core/enums/timer_enums.dart';
+import '../../../shared/themes/app_themes.dart';
 
 /// Экран настройки классического таймера
 class TimerSetupScreen extends StatefulWidget {
@@ -67,37 +74,37 @@ class _TimerSetupScreenState extends State<TimerSetupScreen> {
     }
   }
 
-  String _getTimerTypeName() {
+  String _getTimerTypeName(AppLocalizations l10n) {
     switch (widget.timerType) {
       case TimerType.classic:
-        return 'Классический таймер';
+        return l10n.stopwatchTitle;
       case TimerType.interval1:
-        return 'Интервальный 1';
+        return l10n.interval1Title;
       case TimerType.interval2:
-        return 'Интервальный 2';
+        return l10n.interval2Title;
       case TimerType.intensive:
-        return 'Интенсивный';
+        return l10n.intensiveTitle;
       case TimerType.norest:
-        return 'Без отдыха';
+        return l10n.noRestTitle;
       case TimerType.countdown:
-        return 'Обратный отсчет';
+        return l10n.countdownTitle;
     }
   }
 
-  String _getTimerTypeDescription() {
+  String _getTimerTypeDescription(AppLocalizations l10n) {
     switch (widget.timerType) {
       case TimerType.classic:
-        return 'Простой таймер с настраиваемым временем работы и отдыха';
+        return l10n.stopwatchDescription;
       case TimerType.interval1:
-        return 'Короткие интервалы высокой интенсивности';
+        return l10n.interval1Description;
       case TimerType.interval2:
-        return 'Равные интервалы работы и отдыха';
+        return l10n.interval2Description;
       case TimerType.intensive:
-        return 'Максимальная интенсивность с короткими перерывами';
+        return l10n.intensiveDescription;
       case TimerType.norest:
-        return 'Непрерывная тренировка без перерывов';
+        return l10n.noRestDescription;
       case TimerType.countdown:
-        return 'Простой обратный отсчет времени';
+        return l10n.countdownDescription;
     }
   }
 
@@ -109,6 +116,7 @@ class _TimerSetupScreenState extends State<TimerSetupScreen> {
     timerProvider.setWorkDuration(_workDuration.inSeconds);
     timerProvider.setRestDuration(_restDuration.inSeconds);
     timerProvider.setRounds(_rounds);
+    timerProvider.setLocalizations(AppLocalizations.of(context)!);
 
     // Переходим к экрану таймера
     Navigator.of(context).pushReplacement(
@@ -141,6 +149,16 @@ class _TimerSetupScreenState extends State<TimerSetupScreen> {
     }
   }
 
+  String _getRoundsLabel(int rounds, AppLocalizations l10n) {
+    if (rounds == 1) {
+      return l10n.roundSingular;
+    } else if (rounds < 5) {
+      return l10n.roundPlural;
+    } else {
+      return l10n.roundPluralMany;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -151,8 +169,6 @@ class _TimerSetupScreenState extends State<TimerSetupScreen> {
 
     return Scaffold(
       backgroundColor: customTheme.scaffoldBackgroundColor,
-
-      // AppBar
       appBar: AppBar(
         toolbarHeight: screenHeight * UIConfig.toolbarHeightFactor,
         backgroundColor: theme.appBarTheme.backgroundColor,
@@ -164,16 +180,23 @@ class _TimerSetupScreenState extends State<TimerSetupScreen> {
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(
-          'Настройка таймера',
-          style: theme.textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: customTheme.textPrimaryColor,
-          ),
+        title: Consumer<ThemeProvider>(
+          builder: (context, themeProvider, child) {
+            final isRussian = themeProvider.currentLocale.languageCode == 'ru';
+            return Text(
+              isRussian ? '#НаСпорте' : '#SportOn',
+              style: TextStyle(
+                fontFamily: 'Gamestation',
+                fontSize: screenHeight * UIConfig.toolbarHeightFactor * 0.5,
+                fontWeight: FontWeight.bold,
+                color: customTheme.textPrimaryColor,
+                letterSpacing: 1.2,
+              ),
+            );
+          },
         ),
         centerTitle: true,
       ),
-
       body: SafeArea(
         child: Column(
           children: [
@@ -204,17 +227,36 @@ class _TimerSetupScreenState extends State<TimerSetupScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              _getTimerTypeName(),
-                              style: theme.textTheme.headlineSmall?.copyWith(
-                                fontSize: screenHeight * UIConfig.titleFontSizeFactor,
-                                fontWeight: FontWeight.bold,
-                                color: customTheme.textPrimaryColor,
-                              ),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(screenWidth * 0.02),
+                                  decoration: BoxDecoration(
+                                    color: customTheme.buttonPrimaryColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.timer_outlined,
+                                    color: customTheme.buttonPrimaryColor,
+                                    size: screenWidth * 0.06,
+                                  ),
+                                ),
+                                SizedBox(width: screenWidth * 0.03),
+                                Expanded(
+                                  child: Text(
+                                    _getTimerTypeName(l10n),
+                                    style: theme.textTheme.headlineSmall?.copyWith(
+                                      fontSize: screenHeight * UIConfig.titleFontSizeFactor,
+                                      fontWeight: FontWeight.bold,
+                                      color: customTheme.textPrimaryColor,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                            SizedBox(height: screenHeight * 0.01),
+                            SizedBox(height: screenHeight * 0.015),
                             Text(
-                              _getTimerTypeDescription(),
+                              _getTimerTypeDescription(l10n),
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 fontSize: screenHeight * UIConfig.bodyFontSizeFactor,
                                 color: customTheme.textSecondaryColor,
@@ -225,73 +267,12 @@ class _TimerSetupScreenState extends State<TimerSetupScreen> {
                         ),
                       ),
                     ),
-
-                    SizedBox(height: screenHeight * 0.03),
-
-                    // Настройки времени работы
-                    SlideUpAnimation(
-                      delay: const Duration(milliseconds: 100),
-                      child: Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.all(screenWidth * UIConfig.containerInnerPaddingFactor),
-                        decoration: BoxDecoration(
-                          color: customTheme.cardColor,
-                          borderRadius: BorderRadius.circular(
-                            screenWidth * UIConfig.containerBorderRadiusFactor,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.fitness_center,
-                                  color: customTheme.buttonPrimaryColor,
-                                  size: screenWidth * 0.06,
-                                ),
-                                SizedBox(width: screenWidth * 0.03),
-                                Text(
-                                  'Время работы',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontSize: screenHeight * UIConfig.titleFontSizeFactor * 0.8,
-                                    fontWeight: FontWeight.bold,
-                                    color: customTheme.textPrimaryColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            SizedBox(height: screenHeight * 0.02),
-
-                            TimePicker(
-                              initialMinutes: _workDuration.inMinutes,
-                              initialSeconds: _workDuration.inSeconds % 60,
-                              onChanged: (duration) {
-                                setState(() {
-                                  _workDuration = duration;
-                                });
-                              },
-                              maxMinutes: 99,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    // Настройки времени отдыха (если применимо)
-                    if (widget.timerType != TimerType.norest && widget.timerType != TimerType.countdown) ...[
+                    // Настройки для неклассических таймеров
+                    if (widget.timerType != TimerType.classic) ...[
                       SizedBox(height: screenHeight * 0.03),
-
+                      // Время работы
                       SlideUpAnimation(
-                        delay: const Duration(milliseconds: 200),
+                        delay: const Duration(milliseconds: 100),
                         child: Container(
                           width: double.infinity,
                           padding: EdgeInsets.all(screenWidth * UIConfig.containerInnerPaddingFactor),
@@ -314,13 +295,13 @@ class _TimerSetupScreenState extends State<TimerSetupScreen> {
                               Row(
                                 children: [
                                   Icon(
-                                    Icons.pause_circle_outline,
-                                    color: customTheme.successColor,
+                                    Icons.fitness_center,
+                                    color: customTheme.buttonPrimaryColor,
                                     size: screenWidth * 0.06,
                                   ),
                                   SizedBox(width: screenWidth * 0.03),
                                   Text(
-                                    'Время отдыха',
+                                    l10n.workTime,
                                     style: theme.textTheme.titleMedium?.copyWith(
                                       fontSize: screenHeight * UIConfig.titleFontSizeFactor * 0.8,
                                       fontWeight: FontWeight.bold,
@@ -329,15 +310,13 @@ class _TimerSetupScreenState extends State<TimerSetupScreen> {
                                   ),
                                 ],
                               ),
-
                               SizedBox(height: screenHeight * 0.02),
-
                               TimePicker(
-                                initialMinutes: _restDuration.inMinutes,
-                                initialSeconds: _restDuration.inSeconds % 60,
+                                initialMinutes: _workDuration.inMinutes,
+                                initialSeconds: _workDuration.inSeconds % 60,
                                 onChanged: (duration) {
                                   setState(() {
-                                    _restDuration = duration;
+                                    _workDuration = duration;
                                   });
                                 },
                                 maxMinutes: 99,
@@ -346,138 +325,188 @@ class _TimerSetupScreenState extends State<TimerSetupScreen> {
                           ),
                         ),
                       ),
-                    ],
-
-                    // Настройки количества раундов
-                    SizedBox(height: screenHeight * 0.03),
-
-                    SlideUpAnimation(
-                      delay: const Duration(milliseconds: 300),
-                      child: Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.all(screenWidth * UIConfig.containerInnerPaddingFactor),
-                        decoration: BoxDecoration(
-                          color: customTheme.cardColor,
-                          borderRadius: BorderRadius.circular(
-                            screenWidth * UIConfig.containerBorderRadiusFactor,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.repeat,
-                                  color: customTheme.warningColor,
-                                  size: screenWidth * 0.06,
-                                ),
-                                SizedBox(width: screenWidth * 0.03),
-                                Text(
-                                  'Количество раундов',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontSize: screenHeight * UIConfig.titleFontSizeFactor * 0.8,
-                                    fontWeight: FontWeight.bold,
-                                    color: customTheme.textPrimaryColor,
-                                  ),
+                      // Время отдыха
+                      if (widget.timerType != TimerType.norest && widget.timerType != TimerType.countdown) ...[
+                        SizedBox(height: screenHeight * 0.03),
+                        SlideUpAnimation(
+                          delay: const Duration(milliseconds: 200),
+                          child: Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(screenWidth * UIConfig.containerInnerPaddingFactor),
+                            decoration: BoxDecoration(
+                              color: customTheme.cardColor,
+                              borderRadius: BorderRadius.circular(
+                                screenWidth * UIConfig.containerBorderRadiusFactor,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
                                 ),
                               ],
                             ),
-
-                            SizedBox(height: screenHeight * 0.02),
-
-                            NumberInput(
-                              initialValue: _rounds,
-                              minValue: 1,
-                              maxValue: 50,
-                              onChanged: (value) {
-                                setState(() {
-                                  _rounds = value;
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    // Информация об общем времени
-                    SizedBox(height: screenHeight * 0.03),
-
-                    SlideUpAnimation(
-                      delay: const Duration(milliseconds: 400),
-                      child: Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.all(screenWidth * UIConfig.containerInnerPaddingFactor),
-                        decoration: BoxDecoration(
-                          color: customTheme.buttonPrimaryColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(
-                            screenWidth * UIConfig.containerBorderRadiusFactor,
-                          ),
-                          border: Border.all(
-                            color: customTheme.buttonPrimaryColor.withOpacity(0.3),
-                            width: 2,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.schedule,
-                              color: customTheme.buttonPrimaryColor,
-                              size: screenWidth * 0.08,
-                            ),
-                            SizedBox(width: screenWidth * 0.03),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Общее время тренировки',
-                                    style: theme.textTheme.titleSmall?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: customTheme.buttonPrimaryColor,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.pause_circle_outline,
+                                      color: customTheme.successColor,
+                                      size: screenWidth * 0.06,
                                     ),
-                                  ),
-                                  SizedBox(height: screenHeight * 0.005),
-                                  Text(
-                                    _formatTotalTime(),
-                                    style: theme.textTheme.headlineSmall?.copyWith(
-                                      fontSize: screenHeight * UIConfig.titleFontSizeFactor,
-                                      fontWeight: FontWeight.bold,
-                                      color: customTheme.buttonPrimaryColor,
-                                      fontFamily: AppThemes.timerFontFamily,
-                                    ),
-                                  ),
-                                  if (_rounds > 1) ...[
-                                    SizedBox(height: screenHeight * 0.005),
+                                    SizedBox(width: screenWidth * 0.03),
                                     Text(
-                                      '$_rounds ${_rounds == 1 ? 'раунд' : _rounds < 5 ? 'раунда' : 'раундов'}',
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        color: customTheme.textSecondaryColor,
+                                      l10n.restTime,
+                                      style: theme.textTheme.titleMedium?.copyWith(
+                                        fontSize: screenHeight * UIConfig.titleFontSizeFactor * 0.8,
+                                        fontWeight: FontWeight.bold,
+                                        color: customTheme.textPrimaryColor,
                                       ),
                                     ),
                                   ],
+                                ),
+                                SizedBox(height: screenHeight * 0.02),
+                                TimePicker(
+                                  initialMinutes: _restDuration.inMinutes,
+                                  initialSeconds: _restDuration.inSeconds % 60,
+                                  onChanged: (duration) {
+                                    setState(() {
+                                      _restDuration = duration;
+                                    });
+                                  },
+                                  maxMinutes: 99,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                      // Количество раундов
+                      SizedBox(height: screenHeight * 0.03),
+                      SlideUpAnimation(
+                        delay: const Duration(milliseconds: 300),
+                        child: Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(screenWidth * UIConfig.containerInnerPaddingFactor),
+                          decoration: BoxDecoration(
+                            color: customTheme.cardColor,
+                            borderRadius: BorderRadius.circular(
+                              screenWidth * UIConfig.containerBorderRadiusFactor,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.repeat,
+                                    color: customTheme.warningColor,
+                                    size: screenWidth * 0.06,
+                                  ),
+                                  SizedBox(width: screenWidth * 0.03),
+                                  Text(
+                                    l10n.roundsCount,
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontSize: screenHeight * UIConfig.titleFontSizeFactor * 0.8,
+                                      fontWeight: FontWeight.bold,
+                                      color: customTheme.textPrimaryColor,
+                                    ),
+                                  ),
                                 ],
                               ),
-                            ),
-                          ],
+                              SizedBox(height: screenHeight * 0.02),
+                              NumberInput(
+                                initialValue: _rounds,
+                                minValue: 1,
+                                maxValue: 50,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _rounds = value;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-
-                    SizedBox(height: screenHeight * 0.03),
+                      // Общее время тренировки
+                      SizedBox(height: screenHeight * 0.03),
+                      SlideUpAnimation(
+                        delay: const Duration(milliseconds: 400),
+                        child: Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(screenWidth * UIConfig.containerInnerPaddingFactor),
+                          decoration: BoxDecoration(
+                            color: customTheme.buttonPrimaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(
+                              screenWidth * UIConfig.containerBorderRadiusFactor,
+                            ),
+                            border: Border.all(
+                              color: customTheme.buttonPrimaryColor.withOpacity(0.3),
+                              width: 2,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.schedule,
+                                color: customTheme.buttonPrimaryColor,
+                                size: screenWidth * 0.08,
+                              ),
+                              SizedBox(width: screenWidth * 0.03),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      l10n.totalWorkoutTime,
+                                      style: theme.textTheme.titleSmall?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: customTheme.buttonPrimaryColor,
+                                      ),
+                                    ),
+                                    SizedBox(height: screenHeight * 0.005),
+                                    Text(
+                                      _formatTotalTime(),
+                                      style: theme.textTheme.headlineSmall?.copyWith(
+                                        fontSize: screenHeight * UIConfig.titleFontSizeFactor,
+                                        fontWeight: FontWeight.bold,
+                                        color: customTheme.buttonPrimaryColor,
+                                        fontFamily: AppThemes.timerFontFamily,
+                                      ),
+                                    ),
+                                    if (_rounds > 1) ...[
+                                      SizedBox(height: screenHeight * 0.005),
+                                      Text(
+                                        '$_rounds ${_getRoundsLabel(_rounds, l10n)}',
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          color: customTheme.textSecondaryColor,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: screenHeight * 0.03),
+                    ],
                   ],
                 ),
               ),
             ),
-
             // Нижняя панель с кнопкой запуска
             Container(
               padding: EdgeInsets.all(screenWidth * UIConfig.containerOuterPaddingFactor),
@@ -495,66 +524,31 @@ class _TimerSetupScreenState extends State<TimerSetupScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Предварительный просмотр настроек
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(screenWidth * 0.04),
-                    margin: EdgeInsets.only(bottom: screenHeight * 0.02),
-                    decoration: BoxDecoration(
-                      color: customTheme.scaffoldBackgroundColor,
-                      borderRadius: BorderRadius.circular(
-                        screenWidth * UIConfig.containerBorderRadiusFactor * 0.7,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        // Время работы
-                        Column(
-                          children: [
-                            Icon(
-                              Icons.fitness_center,
-                              color: customTheme.buttonPrimaryColor,
-                              size: screenWidth * 0.05,
-                            ),
-                            SizedBox(height: screenHeight * 0.005),
-                            Text(
-                              '${_workDuration.inMinutes}:${(_workDuration.inSeconds % 60).toString().padLeft(2, '0')}',
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: customTheme.textPrimaryColor,
-                                fontFamily: AppThemes.timerFontFamily,
-                              ),
-                            ),
-                            Text(
-                              'Работа',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: customTheme.textSecondaryColor,
-                                fontSize: screenHeight * UIConfig.bodyFontSizeFactor * 0.8,
-                              ),
-                            ),
-                          ],
+                  if (widget.timerType != TimerType.classic)
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(screenWidth * 0.04),
+                      margin: EdgeInsets.only(bottom: screenHeight * 0.02),
+                      decoration: BoxDecoration(
+                        color: customTheme.scaffoldBackgroundColor,
+                        borderRadius: BorderRadius.circular(
+                          screenWidth * UIConfig.containerBorderRadiusFactor * 0.7,
                         ),
-
-                        // Разделитель
-                        if (widget.timerType != TimerType.norest && widget.timerType != TimerType.countdown)
-                          Container(
-                            width: 1,
-                            height: screenHeight * 0.05,
-                            color: customTheme.dividerColor,
-                          ),
-
-                        // Время отдыха
-                        if (widget.timerType != TimerType.norest && widget.timerType != TimerType.countdown)
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          // Время работы
                           Column(
                             children: [
                               Icon(
-                                Icons.pause_circle_outline,
-                                color: customTheme.successColor,
+                                Icons.fitness_center,
+                                color: customTheme.buttonPrimaryColor,
                                 size: screenWidth * 0.05,
                               ),
                               SizedBox(height: screenHeight * 0.005),
                               Text(
-                                '${_restDuration.inMinutes}:${(_restDuration.inSeconds % 60).toString().padLeft(2, '0')}',
+                                '${_workDuration.inMinutes}:${(_workDuration.inSeconds % 60).toString().padLeft(2, '0')}',
                                 style: theme.textTheme.titleSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: customTheme.textPrimaryColor,
@@ -562,7 +556,7 @@ class _TimerSetupScreenState extends State<TimerSetupScreen> {
                                 ),
                               ),
                               Text(
-                                'Отдых',
+                                l10n.work,
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: customTheme.textSecondaryColor,
                                   fontSize: screenHeight * UIConfig.bodyFontSizeFactor * 0.8,
@@ -570,44 +564,75 @@ class _TimerSetupScreenState extends State<TimerSetupScreen> {
                               ),
                             ],
                           ),
-
-                        // Разделитель
-                        Container(
-                          width: 1,
-                          height: screenHeight * 0.05,
-                          color: customTheme.dividerColor,
-                        ),
-
-                        // Количество раундов
-                        Column(
-                          children: [
-                            Icon(
-                              Icons.repeat,
-                              color: customTheme.warningColor,
-                              size: screenWidth * 0.05,
+                          // Разделитель
+                          if (widget.timerType != TimerType.norest && widget.timerType != TimerType.countdown)
+                            Container(
+                              width: 1,
+                              height: screenHeight * 0.05,
+                              color: customTheme.dividerColor,
                             ),
-                            SizedBox(height: screenHeight * 0.005),
-                            Text(
-                              _rounds.toString(),
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: customTheme.textPrimaryColor,
-                                fontFamily: AppThemes.timerFontFamily,
+                          // Время отдыха
+                          if (widget.timerType != TimerType.norest && widget.timerType != TimerType.countdown)
+                            Column(
+                              children: [
+                                Icon(
+                                  Icons.pause_circle_outline,
+                                  color: customTheme.successColor,
+                                  size: screenWidth * 0.05,
+                                ),
+                                SizedBox(height: screenHeight * 0.005),
+                                Text(
+                                  '${_restDuration.inMinutes}:${(_restDuration.inSeconds % 60).toString().padLeft(2, '0')}',
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: customTheme.textPrimaryColor,
+                                    fontFamily: AppThemes.timerFontFamily,
+                                  ),
+                                ),
+                                Text(
+                                  l10n.rest,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: customTheme.textSecondaryColor,
+                                    fontSize: screenHeight * UIConfig.bodyFontSizeFactor * 0.8,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          // Разделитель
+                          Container(
+                            width: 1,
+                            height: screenHeight * 0.05,
+                            color: customTheme.dividerColor,
+                          ),
+                          // Количество раундов
+                          Column(
+                            children: [
+                              Icon(
+                                Icons.repeat,
+                                color: customTheme.warningColor,
+                                size: screenWidth * 0.05,
                               ),
-                            ),
-                            Text(
-                              _rounds == 1 ? 'Раунд' : 'Раунды',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: customTheme.textSecondaryColor,
-                                fontSize: screenHeight * UIConfig.bodyFontSizeFactor * 0.8,
+                              SizedBox(height: screenHeight * 0.005),
+                              Text(
+                                _rounds.toString(),
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: customTheme.textPrimaryColor,
+                                  fontFamily: AppThemes.timerFontFamily,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                              Text(
+                                _getRoundsLabel(_rounds, l10n),
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: customTheme.textSecondaryColor,
+                                  fontSize: screenHeight * UIConfig.bodyFontSizeFactor * 0.8,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-
                   // Кнопка запуска
                   SizedBox(
                     width: double.infinity,

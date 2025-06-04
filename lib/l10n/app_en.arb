@@ -442,5 +442,576 @@
   "unknownTheme": "Unknown Theme",
   "@unknownTheme": {
     "description": "Unknown theme fallback"
+  },
+
+  "stopwatchTitle": "Stopwatch",
+  "@stopwatchTitle": {
+    "description": "Stopwatch Title"
+  },
+
+  "stopwatchDescription": "Classic stopwatch with lap time capability (rounds)",
+  "@stopwatchDescription": {
+    "description": "Stopwatch Description"
+  },
+
+  "workTime": "Work Time",
+  "@workTime": {
+    "description": "Work time label"
+  },
+
+  "work": "Work",
+  "@work": {
+    "description": "Work state label"
+  },
+
+  "totalWorkoutTime": "Total Workout Time",
+  "@totalWorkoutTime": {
+    "description": "Total workout time label"
+  },
+
+  "roundSingular": "round",
+  "@roundSingular": {
+    "description": "Singular form of round"
+  },
+
+  "roundPlural": "rounds",
+  "@roundPlural": {
+    "description": "Plural form of round"
+  },
+
+  "roundPluralMany": "rounds",
+  "@roundPluralMany": {
+    "description": "Many plural form of round"
+  },
+
+  "preparation": "Preparation",
+  "@preparation": {
+    "description": "Preparation state label"
+  },
+
+  "paused": "Paused",
+  "@paused": {
+    "description": "Paused state label"
+  },
+
+  "finished": "Finished",
+  "@finished": {
+    "description": "Finished state label"
+  },
+
+  "stopped": "Stopped",
+  "@stopped": {
+    "description": "Stopped state label"
+  },
+
+  "preparation": "Preparation",
+  "@preparation": {
+    "description": "Preparation state label"
+  },
+
+  "paused": "Paused",
+  "@paused": {
+    "description": "Paused state label"
+  },
+
+  "finished": "Finished",
+  "@finished": {
+    "description": "Finished state label"
+  },
+
+  "stopped": "Stopped",
+  "@stopped": {
+    "description": "Stopped state label"
+  },
+
+  "workTime": "Work Time",
+  "@workTime": {
+    "description": "Work time label"
+  },
+
+  "work": "Work",
+  "@work": {
+    "description": "Work state label"
+  },
+
+  "totalWorkoutTime": "Total Workout Time",
+  "@totalWorkoutTime": {
+    "description": "Total workout time label"
+  },
+
+  "roundSingular": "round",
+  "@roundSingular": {
+    "description": "Singular form of round"
+  },
+
+  "roundPlural": "rounds",
+  "@roundPlural": {
+    "description": "Plural form of round"
+  },
+
+  "roundPluralMany": "rounds",
+  "@roundPluralMany": {
+    "description": "Many plural form of round"
+  },
+
+  "stopWorkoutQuestion": "Stop workout?",
+  "@stopWorkoutQuestion": {
+    "description": "Confirmation dialog title"
+  },
+
+  "stopWorkoutMessage": "All progress will be lost",
+  "@stopWorkoutMessage": {
+    "description": "Confirmation dialog message"
+  },
+
+  "continue_": "Continue",
+  "@continue_": {
+    "description": "Continue button text"
+  },
+
+  "totalWorkoutProgress": "Total workout progress",
+  "@totalWorkoutProgress": {
+    "description": "Total workout progress label"
+  },
+
+  "information": "Information",
+  "@information": {
+    "description": "Information button text"
+  },
+
+  "tapToPause": "Tap to pause",
+  "@tapToPause": {
+    "description": "Hint when timer is running"
+  },
+
+  "tapToContinue": "Tap to continue",
+  "@tapToContinue": {
+    "description": "Hint when timer is paused"
+  },
+
+  "readyToStart": "Ready to start",
+  "@readyToStart": {
+    "description": "Hint when timer is stopped"
+  },
+
+  "workoutCompleted": "🎉 Workout completed!",
+  "@workoutCompleted": {
+    "description": "Workout completion dialog title"
+  },
+
+  "greatJob": "Great job! You have successfully completed the workout.",
+  "@greatJob": {
+    "description": "Workout completion message"
+  },
+
+  "workoutInformation": "Workout Information",
+  "@workoutInformation": {
+    "description": "Timer info dialog title"
+  },
+
+  "currentRound": "Current round",
+  "@currentRound": {
+    "description": "Current round label"
+  },
+
+  "elapsedTime": "Elapsed time",
+  "@elapsedTime": {
+    "description": "Elapsed time label"
+  },
+
+  "preparation": "Preparation",
+  "@preparation": {
+    "description": "Preparation state label"
+  },
+
+  "paused": "Paused",
+  "@paused": {
+    "description": "Paused state label"
+  },
+
+  "finished": "Finished",
+  "@finished": {
+    "description": "Finished state label"
+  },
+
+  "stopped": "Stopped",
+  "@stopped": {
+    "description": "Stopped state label"
+  },
+
+  "workTime": "Work Time",
+  "@workTime": {
+    "description": "Work time label"
+  },
+
+  "work": "Work",
+  "@work": {
+    "description": "Work state label"
+  },
+
+  "totalWorkoutTime": "Total Workout Time",
+  "@totalWorkoutTime": {
+    "description": "Total workout time label"
+  },
+
+  "roundSingular": "round",
+  "@roundSingular": {
+    "description": "Singular form of round"
+  },
+
+  "roundPlural": "rounds",
+  "@roundPlural": {
+    "description": "Plural form of round"
+  },
+
+  "roundPluralMany": "rounds",
+  "@roundPluralMany": {
+    "description": "Many plural form of round"
+  },
+
+  "stopWorkoutQuestion": "Stop workout?",
+  "@stopWorkoutQuestion": {
+    "description": "Confirmation dialog title"
+  },
+
+  "stopWorkoutMessage": "All progress will be lost",
+  "@stopWorkoutMessage": {
+    "description": "Confirmation dialog message"
+  },
+
+  "continue_": "Continue",
+  "@continue_": {
+    "description": "Continue button text"
+  },
+
+  "totalWorkoutProgress": "Total workout progress",
+  "@totalWorkoutProgress": {
+    "description": "Total workout progress label"
+  },
+
+  "information": "Information",
+  "@information": {
+    "description": "Information button text"
+  },
+
+  "tapToPause": "Tap to pause",
+  "@tapToPause": {
+    "description": "Hint when timer is running"
+  },
+
+  "tapToContinue": "Tap to continue",
+  "@tapToContinue": {
+    "description": "Hint when timer is paused"
+  },
+
+  "readyToStart": "Ready to start",
+  "@readyToStart": {
+    "description": "Hint when timer is stopped"
+  },
+
+  "workoutCompleted": "🎉 Workout completed!",
+  "@workoutCompleted": {
+    "description": "Workout completion dialog title"
+  },
+
+  "greatJob": "Great job! You have successfully completed the workout.",
+  "@greatJob": {
+    "description": "Workout completion message"
+  },
+
+  "workoutInformation": "Workout Information",
+  "@workoutInformation": {
+    "description": "Timer info dialog title"
+  },
+
+  "currentRound": "Current round",
+  "@currentRound": {
+    "description": "Current round label"
+  },
+
+  "elapsedTime": "Elapsed time",
+  "@elapsedTime": {
+    "description": "Elapsed time label"
+  },
+
+  "roundsLabel": "Rounds",
+  "@roundsLabel": {
+    "description": "Rounds label"
+  },
+
+  "preparation": "Preparation",
+  "@preparation": {
+    "description": "Preparation state label"
+  },
+
+  "paused": "Paused",
+  "@paused": {
+    "description": "Paused state label"
+  },
+
+  "finished": "Finished",
+  "@finished": {
+    "description": "Finished state label"
+  },
+
+  "stopped": "Stopped",
+  "@stopped": {
+    "description": "Stopped state label"
+  },
+
+  "workTime": "Work Time",
+  "@workTime": {
+    "description": "Work time label"
+  },
+
+  "work": "Work",
+  "@work": {
+    "description": "Work state label"
+  },
+
+  "totalWorkoutTime": "Total Workout Time",
+  "@totalWorkoutTime": {
+    "description": "Total workout time label"
+  },
+
+  "roundSingular": "round",
+  "@roundSingular": {
+    "description": "Singular form of round"
+  },
+
+  "roundPlural": "rounds",
+  "@roundPlural": {
+    "description": "Plural form of round"
+  },
+
+  "roundPluralMany": "rounds",
+  "@roundPluralMany": {
+    "description": "Many plural form of round"
+  },
+
+  "stopWorkoutQuestion": "Stop workout?",
+  "@stopWorkoutQuestion": {
+    "description": "Confirmation dialog title"
+  },
+
+  "stopWorkoutMessage": "All progress will be lost",
+  "@stopWorkoutMessage": {
+    "description": "Confirmation dialog message"
+  },
+
+  "continue_": "Continue",
+  "@continue_": {
+    "description": "Continue button text"
+  },
+
+  "totalWorkoutProgress": "Total workout progress",
+  "@totalWorkoutProgress": {
+    "description": "Total workout progress label"
+  },
+
+  "information": "Information",
+  "@information": {
+    "description": "Information button text"
+  },
+
+  "tapToPause": "Tap to pause",
+  "@tapToPause": {
+    "description": "Hint when timer is running"
+  },
+
+  "tapToContinue": "Tap to continue",
+  "@tapToContinue": {
+    "description": "Hint when timer is paused"
+  },
+
+  "readyToStart": "Ready to start",
+  "@readyToStart": {
+    "description": "Hint when timer is stopped"
+  },
+
+  "workoutCompleted": "🎉 Workout completed!",
+  "@workoutCompleted": {
+    "description": "Workout completion dialog title"
+  },
+
+  "greatJob": "Great job! You have successfully completed the workout.",
+  "@greatJob": {
+    "description": "Workout completion message"
+  },
+
+  "workoutInformation": "Workout Information",
+  "@workoutInformation": {
+    "description": "Timer info dialog title"
+  },
+
+  "currentRound": "Current round",
+  "@currentRound": {
+    "description": "Current round label"
+  },
+
+  "elapsedTime": "Elapsed time",
+  "@elapsedTime": {
+    "description": "Elapsed time label"
+  },
+
+  "roundsLabel": "Rounds",
+  "@roundsLabel": {
+    "description": "Rounds label"
+  },
+
+  "preparation": "Preparation",
+  "@preparation": {
+    "description": "Preparation state label"
+  },
+
+  "paused": "Paused",
+  "@paused": {
+    "description": "Paused state label"
+  },
+
+  "finished": "Finished",
+  "@finished": {
+    "description": "Finished state label"
+  },
+
+  "stopped": "Stopped",
+  "@stopped": {
+    "description": "Stopped state label"
+  },
+
+  "workTime": "Work Time",
+  "@workTime": {
+    "description": "Work time label"
+  },
+
+  "work": "Work",
+  "@work": {
+    "description": "Work state label"
+  },
+
+  "totalWorkoutTime": "Total Workout Time",
+  "@totalWorkoutTime": {
+    "description": "Total workout time label"
+  },
+
+  "roundSingular": "round",
+  "@roundSingular": {
+    "description": "Singular form of round"
+  },
+
+  "roundPlural": "rounds",
+  "@roundPlural": {
+    "description": "Plural form of round"
+  },
+
+  "roundPluralMany": "rounds",
+  "@roundPluralMany": {
+    "description": "Many plural form of round"
+  },
+
+  "stopWorkoutQuestion": "Stop workout?",
+  "@stopWorkoutQuestion": {
+    "description": "Confirmation dialog title"
+  },
+
+  "stopWorkoutMessage": "All progress will be lost",
+  "@stopWorkoutMessage": {
+    "description": "Confirmation dialog message"
+  },
+
+  "continue_": "Continue",
+  "@continue_": {
+    "description": "Continue button text"
+  },
+
+  "totalWorkoutProgress": "Total workout progress",
+  "@totalWorkoutProgress": {
+    "description": "Total workout progress label"
+  },
+
+  "information": "Information",
+  "@information": {
+    "description": "Information button text"
+  },
+
+  "tapToPause": "Tap to pause",
+  "@tapToPause": {
+    "description": "Hint when timer is running"
+  },
+
+  "tapToContinue": "Tap to continue",
+  "@tapToContinue": {
+    "description": "Hint when timer is paused"
+  },
+
+  "readyToStart": "Ready to start",
+  "@readyToStart": {
+    "description": "Hint when timer is stopped"
+  },
+
+  "workoutCompleted": "🎉 Workout completed!",
+  "@workoutCompleted": {
+    "description": "Workout completion dialog title"
+  },
+
+  "greatJob": "Great job! You have successfully completed the workout.",
+  "@greatJob": {
+    "description": "Workout completion message"
+  },
+
+  "workoutInformation": "Workout Information",
+  "@workoutInformation": {
+    "description": "Timer info dialog title"
+  },
+
+  "currentRound": "Current round",
+  "@currentRound": {
+    "description": "Current round label"
+  },
+
+  "elapsedTime": "Elapsed time",
+  "@elapsedTime": {
+    "description": "Elapsed time label"
+  },
+
+  "roundsLabel": "Rounds",
+  "@roundsLabel": {
+    "description": "Rounds label"
+  },
+
+  "stopwatchMode": "Stopwatch Mode",
+  "@stopwatchMode": {
+    "description": "Stopwatch mode label"
+  },
+
+  "lapTime": "Lap",
+  "@lapTime": {
+    "description": "Lap time button"
+  },
+
+  "lapTimes": "Lap Times",
+  "@lapTimes": {
+    "description": "Lap times dialog title"
+  },
+
+  "splitTime": "Split",
+  "@splitTime": {
+    "description": "Split time column header"
+  },
+
+  "totalTime": "Total Time",
+  "@totalTime": {
+    "description": "Total time label"
+  },
+
+  "noLapTimes": "No lap times recorded yet.\nTap the flag button to record lap times.",
+  "@noLapTimes": {
+    "description": "Empty state message for lap times"
+  },
+
+  "close": "Close",
+  "@close": {
+    "description": "Close button text"
   }
+
 }

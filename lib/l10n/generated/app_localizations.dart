@@ -209,10 +209,10 @@ abstract class AppLocalizations {
   /// **'Lap'**
   String get lap;
 
-  /// Lap time label
+  /// Lap time button
   ///
   /// In en, this message translates to:
-  /// **'Lap Time'**
+  /// **'Lap'**
   String get lapTime;
 
   /// Total time label
@@ -598,6 +598,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unknown Theme'**
   String get unknownTheme;
+
+  /// Stopwatch Title
+  ///
+  /// In en, this message translates to:
+  /// **'Stopwatch'**
+  String get stopwatchTitle;
+
+  /// Stopwatch Description
+  ///
+  /// In en, this message translates to:
+  /// **'Classic stopwatch with lap time capability (rounds)'**
+  String get stopwatchDescription;
+
+  /// Work time label
+  ///
+  /// In en, this message translates to:
+  /// **'Work Time'**
+  String get workTime;
+
+  /// Work state label
+  ///
+  /// In en, this message translates to:
+  /// **'Work'**
+  String get work;
+
+  /// Total workout time label
+  ///
+  /// In en, this message translates to:
+  /// **'Total Workout Time'**
+  String get totalWorkoutTime;
+
+  /// Singular form of round
+  ///
+  /// In en, this message translates to:
+  /// **'round'**
+  String get roundSingular;
+
+  /// Plural form of round
+  ///
+  /// In en, this message translates to:
+  /// **'rounds'**
+  String get roundPlural;
+
+  /// Many plural form of round
+  ///
+  /// In en, this message translates to:
+  /// **'rounds'**
+  String get roundPluralMany;
+
+  /// Preparation state label
+  ///
+  /// In en, this message translates to:
+  /// **'Preparation'**
+  String get preparation;
+
+  /// Paused state label
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get paused;
+
+  /// Finished state label
+  ///
+  /// In en, this message translates to:
+  /// **'Finished'**
+  String get finished;
+
+  /// Stopped state label
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped'**
+  String get stopped;
+
+  /// Confirmation dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Stop workout?'**
+  String get stopWorkoutQuestion;
+
+  /// Confirmation dialog message
+  ///
+  /// In en, this message translates to:
+  /// **'All progress will be lost'**
+  String get stopWorkoutMessage;
+
+  /// Continue button text
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continue_;
+
+  /// Total workout progress label
+  ///
+  /// In en, this message translates to:
+  /// **'Total workout progress'**
+  String get totalWorkoutProgress;
+
+  /// Information button text
+  ///
+  /// In en, this message translates to:
+  /// **'Information'**
+  String get information;
+
+  /// Hint when timer is running
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to pause'**
+  String get tapToPause;
+
+  /// Hint when timer is paused
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to continue'**
+  String get tapToContinue;
+
+  /// Hint when timer is stopped
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to start'**
+  String get readyToStart;
+
+  /// Workout completion dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'🎉 Workout completed!'**
+  String get workoutCompleted;
+
+  /// Workout completion message
+  ///
+  /// In en, this message translates to:
+  /// **'Great job! You have successfully completed the workout.'**
+  String get greatJob;
+
+  /// Timer info dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Workout Information'**
+  String get workoutInformation;
+
+  /// Current round label
+  ///
+  /// In en, this message translates to:
+  /// **'Current round'**
+  String get currentRound;
+
+  /// Elapsed time label
+  ///
+  /// In en, this message translates to:
+  /// **'Elapsed time'**
+  String get elapsedTime;
+
+  /// Rounds label
+  ///
+  /// In en, this message translates to:
+  /// **'Rounds'**
+  String get roundsLabel;
+
+  /// Stopwatch mode label
+  ///
+  /// In en, this message translates to:
+  /// **'Stopwatch Mode'**
+  String get stopwatchMode;
+
+  /// Lap times dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Lap Times'**
+  String get lapTimes;
+
+  /// Split time column header
+  ///
+  /// In en, this message translates to:
+  /// **'Split'**
+  String get splitTime;
+
+  /// Empty state message for lap times
+  ///
+  /// In en, this message translates to:
+  /// **'No lap times recorded yet.\nTap the flag button to record lap times.'**
+  String get noLapTimes;
+
+  /// Close button text
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

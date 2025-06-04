@@ -48,6 +48,12 @@ flutter:
     - assets/fonts/
 
   fonts:
+    # Шрифт для шапки главного меню
+    - family: Gamestation
+      fonts:
+        - asset: assets/fonts/GamestationWarped.otf
+          weight: 500
+
     # Основной шрифт для заголовков
     - family: Poppins
       fonts:

@@ -12,6 +12,12 @@ import '../../../core/services/localization_service.dart';
 import '../../../features/timers/screens/timer_setup_screen.dart';
 import '../../../core/providers/timer_provider.dart';
 
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+// import '../../../core/providers/settings_provider.dart';
+import '../../../core/enums/timer_enums.dart';
+import '../../../shared/themes/app_themes.dart';
+
 /// Главный экран выбора таймеров SportOn
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
@@ -91,11 +97,21 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         toolbarHeight: screenHeight * UIConfig.toolbarHeightFactor,
         backgroundColor: theme.appBarTheme.backgroundColor,
         elevation: 0,
-        title: Text(
-          l10n.appTitle,
-          style: theme.textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+        title: Consumer<ThemeProvider>(
+          builder: (context, themeProvider, child) {
+            final isRussian = themeProvider.currentLocale.languageCode == 'ru';
+
+            return Text(
+              isRussian ? '#НаСпорте' : '#SportOn',
+              style: TextStyle(
+                fontFamily: 'Gamestation',
+                fontSize: screenHeight * UIConfig.toolbarHeightFactor * 0.5,
+                fontWeight: FontWeight.bold,
+                color: customTheme.textPrimaryColor,
+                letterSpacing: 1.2,
+              ),
+            );
+          },
         ),
         centerTitle: true,
         actions: [
@@ -104,7 +120,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             padding: EdgeInsets.only(right: screenWidth * 0.02),
             child: CustomButtons.CircularActionButton(
               icon: Icons.settings,
-              size: screenWidth * 0.12,
+              size: screenWidth * 0.08,
               tooltip: 'Настройки',
               onPressed: () => _showSettingsBottomSheet(context),
             ),
@@ -112,36 +128,10 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         ],
       ),
 
-      // Основной контент
+// Основной контент
       body: SafeArea(
         child: Column(
           children: [
-            // Заголовок секции
-            Padding(
-              padding: EdgeInsets.all(screenWidth * UIConfig.containerOuterPaddingFactor),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.selectTimer,
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontSize: screenHeight * UIConfig.titleFontSizeFactor,
-                      fontWeight: FontWeight.bold,
-                      color: customTheme.textPrimaryColor,
-                    ),
-                  ),
-                  SizedBox(height: screenHeight * 0.01),
-                  Text(
-                    'Выберите тип тренировки и настройте параметры',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontSize: screenHeight * UIConfig.subtitleFontSizeFactor,
-                      color: customTheme.textSecondaryColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
             // Список таймеров
             Expanded(
               child: ListView.builder(
@@ -155,7 +145,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                   return TimerCard(
                     title: LocalizationService.getTranslation(l10n, timerConfig.titleKey),
                     subtitle: LocalizationService.getTranslation(l10n, timerConfig.subtitleKey),
-                    description: LocalizationService.getTranslation(l10n, timerConfig.descriptionKey),
+                    description: '', // Оставляем пустым - описание теперь показывается внизу
                     icon: timerConfig.icon,
                     accentColor: timerConfig.color,
                     isSelected: _selectedTimerType == timerConfig.id,
@@ -181,40 +171,62 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Информация о выбранном таймере
+                  // Подробная информация о выбранном таймере
                   if (_selectedTimerType != null) ...[
                     Container(
                       width: double.infinity,
                       padding: EdgeInsets.all(screenWidth * 0.04),
                       margin: EdgeInsets.only(bottom: screenHeight * 0.02),
                       decoration: BoxDecoration(
-                        color: customTheme.successColor.withOpacity(0.1),
+                        color: customTheme.buttonPrimaryColor.withOpacity(0.05),
                         borderRadius: BorderRadius.circular(
-                          screenWidth * UIConfig.containerBorderRadiusFactor * 0.7,
+                          screenWidth * UIConfig.containerBorderRadiusFactor,
                         ),
                         border: Border.all(
-                          color: customTheme.successColor.withOpacity(0.3),
+                          color: customTheme.buttonPrimaryColor.withOpacity(0.2),
                           width: 1,
                         ),
                       ),
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.check_circle_outline,
-                            color: customTheme.successColor,
-                            size: screenWidth * 0.05,
-                          ),
-                          SizedBox(width: screenWidth * 0.03),
-                          Expanded(
-                            child: Text(
-                              'Выбрано: ${_getSelectedTimerName(l10n)}',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: customTheme.successColor,
-                                fontWeight: FontWeight.w600,
-                                fontSize: screenHeight * UIConfig.bodyFontSizeFactor * 0.9,
+                          // Заголовок с иконкой
+                          Row(
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(screenWidth * 0.02),
+                                decoration: BoxDecoration(
+                                  color: _getSelectedTimerColor().withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  _getSelectedTimerIcon(),
+                                  color: _getSelectedTimerColor(),
+                                  size: screenWidth * 0.05,
+                                ),
                               ),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
+                              SizedBox(width: screenWidth * 0.03),
+                              Expanded(
+                                child: Text(
+                                  _getSelectedTimerName(l10n),
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: customTheme.textPrimaryColor,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          SizedBox(height: screenHeight * 0.015),
+
+                          // Подробное описание
+                          Text(
+                            _getSelectedTimerDescription(l10n),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: customTheme.textSecondaryColor,
+                              height: 1.4,
+                              fontSize: screenHeight * UIConfig.bodyFontSizeFactor * 0.95,
                             ),
                           ),
                         ],
@@ -252,6 +264,149 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     // Тактильная обратная связь
     if (_selectedTimerType != null) {
       // HapticFeedback.selectionClick(); // Раскомментировать при необходимости
+    }
+  }
+
+  /// Получить подробное описание выбранного таймера
+  String _getSelectedTimerDescription(AppLocalizations l10n) {
+    if (_selectedTimerType == null) return '';
+
+    final config = _timerTypes.firstWhere((t) => t.id == _selectedTimerType);
+    return LocalizationService.getTranslation(l10n, config.descriptionKey);
+  }
+
+  /// Получить иконку выбранного таймера
+  IconData _getSelectedTimerIcon() {
+    if (_selectedTimerType == null) return Icons.timer;
+
+    final config = _timerTypes.firstWhere((t) => t.id == _selectedTimerType);
+    return config.icon;
+  }
+
+  /// Получить цвет выбранного таймера
+  Color _getSelectedTimerColor() {
+    if (_selectedTimerType == null) return Colors.blue;
+
+    final config = _timerTypes.firstWhere((t) => t.id == _selectedTimerType);
+    return config.color;
+  }
+
+  /// Проверить, является ли провайдер темным (для совместимости)
+  bool _isDarkTheme(ThemeProvider themeProvider) {
+    return themeProvider.isDarkTheme;
+  }
+
+  /// Получить тип текущей темы из ThemeProvider
+  AppThemeType _getCurrentThemeType(ThemeProvider themeProvider) {
+    // Используем геттер currentThemeType из вашего ThemeProvider
+    return themeProvider.currentThemeType;
+  }
+
+  /// Получить расширение темы по типу
+  CustomThemeExtension _getThemeExtensionByType(AppThemeType themeType) {
+    switch (themeType) {
+      case AppThemeType.classic:
+        return const CustomThemeExtension(
+          name: 'Классическая',
+          scaffoldBackgroundColor: Color(0xFFF8FAFC),
+          cardColor: Colors.white,
+          dividerColor: Color(0xFFE2E8F0),
+          shadowColor: Colors.black12,
+          textPrimaryColor: Color(0xFF1E293B),
+          textSecondaryColor: Color(0xFF64748B),
+          textDisabledColor: Color(0xFFCBD5E1),
+          buttonPrimaryColor: Color(0xFF3B82F6),
+          buttonSecondaryColor: Color(0xFF6B7280),
+          buttonDisabledColor: Color(0xFFD1D5DB),
+          successColor: Color(0xFF10B981),
+          warningColor: Color(0xFFF59E0B),
+          errorColor: Color(0xFFEF4444),
+        );
+      case AppThemeType.dark:
+        return const CustomThemeExtension(
+          name: 'Темная',
+          scaffoldBackgroundColor: Color(0xFF0F172A),
+          cardColor: Color(0xFF1E293B),
+          dividerColor: Color(0xFF334155),
+          shadowColor: Colors.black26,
+          textPrimaryColor: Color(0xFFF1F5F9),
+          textSecondaryColor: Color(0xFF94A3B8),
+          textDisabledColor: Color(0xFF475569),
+          buttonPrimaryColor: Color(0xFF3B82F6),
+          buttonSecondaryColor: Color(0xFF64748B),
+          buttonDisabledColor: Color(0xFF374151),
+          successColor: Color(0xFF10B981),
+          warningColor: Color(0xFFF59E0B),
+          errorColor: Color(0xFFEF4444),
+        );
+      case AppThemeType.forest:
+        return const CustomThemeExtension(
+          name: 'Лес',
+          scaffoldBackgroundColor: Color(0xFFF0F4F0),
+          cardColor: Colors.white,
+          dividerColor: Color(0xFFD4E6D4),
+          shadowColor: Color(0x33059669),
+          textPrimaryColor: Color(0xFF064E3B),
+          textSecondaryColor: Color(0xFF047857),
+          textDisabledColor: Color(0xFFA7C3A7),
+          buttonPrimaryColor: Color(0xFF059669),
+          buttonSecondaryColor: Color(0xFF10B981),
+          buttonDisabledColor: Color(0xFFBBE5D1),
+          successColor: Color(0xFF22C55E),
+          warningColor: Color(0xFFF59E0B),
+          errorColor: Color(0xFFEF4444),
+        );
+      case AppThemeType.ocean:
+        return const CustomThemeExtension(
+          name: 'Океан',
+          scaffoldBackgroundColor: Color(0xFFF0F9FF),
+          cardColor: Colors.white,
+          dividerColor: Color(0xFFBAE6FD),
+          shadowColor: Color(0x330EA5E9),
+          textPrimaryColor: Color(0xFF0C4A6E),
+          textSecondaryColor: Color(0xFF0284C7),
+          textDisabledColor: Color(0xFF7DD3FC),
+          buttonPrimaryColor: Color(0xFF0EA5E9),
+          buttonSecondaryColor: Color(0xFF38BDF8),
+          buttonDisabledColor: Color(0xFFBFDBFE),
+          successColor: Color(0xFF10B981),
+          warningColor: Color(0xFFF59E0B),
+          errorColor: Color(0xFFEF4444),
+        );
+      case AppThemeType.desert:
+        return const CustomThemeExtension(
+          name: 'Пустыня',
+          scaffoldBackgroundColor: Color(0xFFFEF3E2),
+          cardColor: Colors.white,
+          dividerColor: Color(0xFFFED7AA),
+          shadowColor: Color(0x33EA580C),
+          textPrimaryColor: Color(0xFF9A3412),
+          textSecondaryColor: Color(0xFFEA580C),
+          textDisabledColor: Color(0xFFFEDBB6),
+          buttonPrimaryColor: Color(0xFFEA580C),
+          buttonSecondaryColor: Color(0xFFF97316),
+          buttonDisabledColor: Color(0xFFFED7AA),
+          successColor: Color(0xFF10B981),
+          warningColor: Color(0xFFF59E0B),
+          errorColor: Color(0xFFEF4444),
+        );
+      case AppThemeType.mochaMousse:
+        return const CustomThemeExtension(
+          name: 'Мокко Мусс',
+          scaffoldBackgroundColor: Color(0xFFF7F3F0),
+          cardColor: Colors.white,
+          dividerColor: Color(0xFFE7D7CC),
+          shadowColor: Color(0x338B4513),
+          textPrimaryColor: Color(0xFF5D4037),
+          textSecondaryColor: Color(0xFF8D6E63),
+          textDisabledColor: Color(0xFFD7CCC8),
+          buttonPrimaryColor: Color(0xFF8B4513),
+          buttonSecondaryColor: Color(0xFFA0522D),
+          buttonDisabledColor: Color(0xFFE6C2B3),
+          successColor: Color(0xFF10B981),
+          warningColor: Color(0xFFF59E0B),
+          errorColor: Color(0xFFEF4444),
+        );
     }
   }
 
@@ -304,140 +459,299 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   void _showSettingsBottomSheet(BuildContext context) {
     final theme = Theme.of(context);
     final customTheme = theme.extension<CustomThemeExtension>()!;
-    final l10n = AppLocalizations.of(context)!;
     final screenHeight = MediaQuery.of(context).size.height;
 
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => Container(
-        height: screenHeight * 0.4,
-        decoration: BoxDecoration(
-          color: customTheme.cardColor,
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(20),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Заголовок
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.settings,
-                    color: customTheme.buttonPrimaryColor,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    l10n.settingsTitle,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: customTheme.textPrimaryColor,
-                    ),
-                  ),
-                ],
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          final themeProvider = context.read<ThemeProvider>();
+
+          return Container(
+            height: screenHeight * 0.5,
+            decoration: BoxDecoration(
+              color: customTheme.cardColor,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, -5),
+                ),
+              ],
             ),
+            child: Column(
+              children: [
+                // Ручка для перетаскивания
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(top: 12),
+                  decoration: BoxDecoration(
+                    color: customTheme.dividerColor,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
 
-            // Настройки
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: [
-                    // Текущая тема
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: customTheme.buttonPrimaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
+                // Заголовок
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.settings,
+                        color: customTheme.buttonPrimaryColor,
+                        size: 24,
                       ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.palette,
-                            color: customTheme.buttonPrimaryColor,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Текущая тема',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Text(
-                                  customTheme.name,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: customTheme.textSecondaryColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                      const SizedBox(width: 12),
+                      Text(
+                        'Настройки',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: customTheme.textPrimaryColor,
+                        ),
                       ),
-                    ),
+                    ],
+                  ),
+                ),
 
-                    const SizedBox(height: 16),
-
-                    // Кнопки управления
-                    Row(
+// Контент настроек
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: CustomButtons.PrimaryButton(
-                            text: l10n.switchTheme,
-                            icon: Icons.palette_outlined,
-                            onPressed: () {
-                              context.read<ThemeProvider>().nextTheme();
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: CustomButtons.SecondaryButton(
-                            text: l10n.switchLanguage,
-                            icon: Icons.language,
-                            onPressed: () {
-                              context.read<ThemeProvider>().toggleLanguage();
-                            },
-                          ),
-                        ),
+                        // Секция выбора темы
+                        _buildThemeSection(context, themeProvider, setModalState),
+
+                        const SizedBox(height: 24),
+
+                        // Секция выбора языка
+                        _buildLanguageSection(context, themeProvider, setModalState),
+
+                        // Дополнительный отступ снизу для прокрутки
+                        SizedBox(height: MediaQuery.of(context).padding.bottom + 20),
                       ],
                     ),
+                  ),
+                ),
 
-                    const SizedBox(height: 16),
+                // Отступ снизу (убираем, так как теперь в SingleChildScrollView)
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
 
-                    // Информация
-                    Text(
-                      'SportOn v1.0.0\nСовременный таймер для кроссфит тренировок',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: customTheme.textSecondaryColor,
-                      ),
+  /// Секция выбора темы с цветными кружками
+  Widget _buildThemeSection(BuildContext context, ThemeProvider themeProvider, StateSetter setModalState) {
+    final theme = Theme.of(context);
+    final customTheme = theme.extension<CustomThemeExtension>()!;
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.palette,
+              color: customTheme.textSecondaryColor,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Тема',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: customTheme.textPrimaryColor,
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 8),
+
+        // Цветные кружки тем
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: AppThemes.availableThemes.map((themeType) {
+            final themeExtension = _getThemeExtensionByType(themeType);
+            final isSelected = themeProvider.currentThemeType == themeType;
+
+            return GestureDetector(
+              onTap: () async {
+                await themeProvider.setTheme(themeType);
+                setModalState(() {});
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: isSelected ? 28 : 24,
+                height: isSelected ? 28 : 24,
+                decoration: BoxDecoration(
+                  color: themeExtension.buttonPrimaryColor,
+                  shape: BoxShape.circle,
+                  border: isSelected ? Border.all(
+                    color: customTheme.textPrimaryColor,
+                    width: 2,
+                  ) : null,
+                  boxShadow: isSelected ? [
+                    BoxShadow(
+                      color: themeExtension.buttonPrimaryColor.withOpacity(0.4),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
-                  ],
+                  ] : null,
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+
+        const SizedBox(height: 8),
+
+        // Название выбранной темы
+        Center(
+          child: Text(
+            customTheme.name,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: customTheme.textSecondaryColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Секция выбора языка с флагами
+  Widget _buildLanguageSection(BuildContext context, ThemeProvider themeProvider, StateSetter setModalState) {
+    final theme = Theme.of(context);
+    final customTheme = theme.extension<CustomThemeExtension>()!;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.language,
+              color: customTheme.textSecondaryColor,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Языки',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: customTheme.textPrimaryColor,
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 12),
+
+        // Русский язык
+        _buildLanguageOption(
+          context,
+          flag: '🇷🇺',
+          language: 'Русский',
+          languageCode: 'ru',
+          isSelected: themeProvider.currentLocale.languageCode == 'ru',
+          onTap: () async {
+            await themeProvider.setLanguage('ru');
+            setModalState(() {});
+          },
+        ),
+
+        const SizedBox(height: 12),
+
+        // Английский язык
+        _buildLanguageOption(
+          context,
+          flag: '🇺🇸',
+          language: 'English',
+          languageCode: 'en',
+          isSelected: themeProvider.currentLocale.languageCode == 'en',
+          onTap: () async {
+            await themeProvider.setLanguage('en');
+            setModalState(() {});
+          },
+        ),
+      ],
+    );
+  }
+
+  /// Опция выбора языка
+  Widget _buildLanguageOption(
+      BuildContext context, {
+        required String flag,
+        required String language,
+        required String languageCode,
+        required bool isSelected,
+        required VoidCallback onTap,
+      }) {
+    final theme = Theme.of(context);
+    final customTheme = theme.extension<CustomThemeExtension>()!;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? customTheme.buttonPrimaryColor.withOpacity(0.1)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? customTheme.buttonPrimaryColor.withOpacity(0.3)
+                : customTheme.dividerColor,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Text(
+              flag,
+              style: const TextStyle(fontSize: 24),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                language,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: customTheme.textPrimaryColor,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 ),
               ),
             ),
-
-            // Кнопка закрытия
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: SizedBox(
-                width: double.infinity,
-                child: CustomButtons.CustomTextButton(
-                  text: 'Закрыть',
-                  onPressed: () => Navigator.pop(context),
-                ),
+            // Переключатель
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? customTheme.buttonPrimaryColor
+                    : customTheme.dividerColor,
+                shape: BoxShape.circle,
               ),
+              child: isSelected
+                  ? const Icon(
+                Icons.check,
+                color: Colors.white,
+                size: 16,
+              )
+                  : null,
             ),
           ],
         ),

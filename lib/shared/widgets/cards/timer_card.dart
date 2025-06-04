@@ -80,7 +80,8 @@ class _TimerCardState extends State<TimerCard>
     final theme = Theme.of(context);
     final customTheme = theme.extension<CustomThemeExtension>()!;
 
-    final cardHeight = screenHeight * 0.16;
+    // Уменьшенная высота карточки
+    final cardHeight = screenHeight * 0.10; // Было 0.16, стало 0.10
     final borderRadius = screenWidth * UIConfig.containerBorderRadiusFactor;
     final accentColor = widget.accentColor ?? customTheme.buttonPrimaryColor;
 
@@ -99,7 +100,7 @@ class _TimerCardState extends State<TimerCard>
               height: cardHeight,
               margin: EdgeInsets.symmetric(
                 horizontal: screenWidth * UIConfig.containerOuterPaddingFactor * 0.5,
-                vertical: screenHeight * 0.008,
+                vertical: screenHeight * 0.006, // Уменьшены отступы между карточками
               ),
               decoration: BoxDecoration(
                 color: customTheme.cardColor,
@@ -160,18 +161,18 @@ class _TimerCardState extends State<TimerCard>
                     // Контент
                     Padding(
                       padding: EdgeInsets.all(
-                        screenWidth * UIConfig.containerInnerPaddingFactor,
+                        screenWidth * UIConfig.containerInnerPaddingFactor * 0.8, // Уменьшены внутренние отступы
                       ),
                       child: Row(
                         children: [
-                          // Иконка
+                          // Иконка (уменьшена)
                           Container(
-                            width: screenWidth * 0.15,
-                            height: screenWidth * 0.15,
+                            width: screenWidth * 0.12, // Было 0.15
+                            height: screenWidth * 0.12, // Было 0.15
                             decoration: BoxDecoration(
                               color: accentColor.withOpacity(0.15),
                               borderRadius: BorderRadius.circular(
-                                screenWidth * 0.03,
+                                screenWidth * 0.025, // Уменьшен радиус
                               ),
                               border: Border.all(
                                 color: accentColor.withOpacity(0.3),
@@ -180,12 +181,12 @@ class _TimerCardState extends State<TimerCard>
                             ),
                             child: Icon(
                               widget.icon,
-                              size: screenWidth * 0.08,
+                              size: screenWidth * 0.06, // Было 0.08
                               color: accentColor,
                             ),
                           ),
 
-                          SizedBox(width: screenWidth * 0.04),
+                          SizedBox(width: screenWidth * 0.03),
 
                           // Текстовая информация
                           Expanded(
@@ -197,7 +198,7 @@ class _TimerCardState extends State<TimerCard>
                                 Text(
                                   widget.title,
                                   style: theme.textTheme.titleMedium?.copyWith(
-                                    fontSize: screenHeight * UIConfig.titleFontSizeFactor * 0.7,
+                                    fontSize: screenHeight * UIConfig.titleFontSizeFactor * 0.65, // Уменьшен шрифт
                                     fontWeight: FontWeight.bold,
                                     color: customTheme.textPrimaryColor,
                                   ),
@@ -205,13 +206,13 @@ class _TimerCardState extends State<TimerCard>
                                   overflow: TextOverflow.ellipsis,
                                 ),
 
-                                SizedBox(height: screenHeight * 0.003),
+                                SizedBox(height: screenHeight * 0.002), // Уменьшен отступ
 
                                 // Подзаголовок
                                 Text(
                                   widget.subtitle,
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    fontSize: screenHeight * UIConfig.subtitleFontSizeFactor * 0.8,
+                                    fontSize: screenHeight * UIConfig.subtitleFontSizeFactor * 0.75, // Уменьшен шрифт
                                     color: accentColor,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -219,27 +220,16 @@ class _TimerCardState extends State<TimerCard>
                                   overflow: TextOverflow.ellipsis,
                                 ),
 
-                                SizedBox(height: screenHeight * 0.008),
-
-                                // Описание
-                                Text(
-                                  widget.description,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    fontSize: screenHeight * UIConfig.bodyFontSizeFactor * 0.75,
-                                    color: customTheme.textSecondaryColor,
-                                    height: 1.3,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                                // Убираем описание совсем, так как оно теперь показывается внизу экрана
+                                // и места в компактной карточке для него нет
                               ],
                             ),
                           ),
 
-                          // Стрелка или индикатор выбора
+                          // Стрелка или индикатор выбора (уменьшен)
                           Container(
-                            width: screenWidth * 0.08,
-                            height: screenWidth * 0.08,
+                            width: screenWidth * 0.07, // Было 0.08
+                            height: screenWidth * 0.07, // Было 0.08
                             decoration: BoxDecoration(
                               color: widget.isSelected
                                   ? accentColor
@@ -250,7 +240,7 @@ class _TimerCardState extends State<TimerCard>
                               widget.isSelected
                                   ? Icons.check
                                   : Icons.arrow_forward_ios,
-                              size: screenWidth * 0.04,
+                              size: screenWidth * 0.035, // Было 0.04
                               color: widget.isSelected
                                   ? Colors.white
                                   : accentColor,
