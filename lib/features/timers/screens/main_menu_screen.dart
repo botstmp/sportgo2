@@ -1,7 +1,7 @@
 // lib/features/timers/screens/main_menu_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
+import '../../../features/history/screens/history_screen.dart';
 import '../../../core/providers/theme_provider.dart';
 import '../../../core/constants/ui_config.dart';
 import '../../../shared/themes/app_themes.dart';
@@ -115,6 +115,14 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         ),
         centerTitle: true,
         actions: [
+          // В actions AppBar добавить:
+          IconButton(
+            icon: Icon(Icons.history),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const HistoryScreen()),
+            ),
+          ),
           // Кнопка настроек тем
           Padding(
             padding: EdgeInsets.only(right: screenWidth * 0.02),

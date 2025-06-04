@@ -2,12 +2,11 @@
 import 'package:flutter/material.dart';
 import '../../../core/services/workout_history_service.dart';
 import '../../../core/models/workout_session.dart';
-import '../../../core/models/workout_enums_extensions.dart'; // ДОБАВЛЕНО
-import '../../../core/enums/timer_enums.dart';
+import '../../../core/models/workout_enums.dart';
+import '../../../core/models/workout_models.dart';
 import '../../../core/constants/ui_config.dart';
 import '../../../shared/themes/app_themes.dart';
 import '../../../shared/widgets/buttons/custom_buttons.dart';
-import '../../../shared/widgets/cards/timer_card.dart';
 import '../../../shared/widgets/animations/animated_widgets.dart';
 import '../../../shared/widgets/dialogs/custom_dialogs.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -30,8 +29,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
   // Фильтры
   TimerType? _selectedTimerType;
   String _searchQuery = '';
-  DateTimeRange? _selectedDateRange;
-  bool _showOnlyLinked = false;
 
   // Сортировка
   _SortType _sortType = _SortType.dateDesc;
@@ -85,20 +82,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
             (session.workoutTitle?.toLowerCase().contains(query) ?? false) ||
             (session.userNotes?.toLowerCase().contains(query) ?? false);
       }).toList();
-    }
-
-    // Фильтр по дате
-    if (_selectedDateRange != null) {
-      filtered = filtered.where((session) {
-        final sessionDate = session.startTime;
-        return sessionDate.isAfter(_selectedDateRange!.start.subtract(const Duration(days: 1))) &&
-            sessionDate.isBefore(_selectedDateRange!.end.add(const Duration(days: 1)));
-      }).toList();
-    }
-
-    // Фильтр только привязанные тренировки
-    if (_showOnlyLinked) {
-      filtered = filtered.where((session) => session.isLinkedWorkout).toList();
     }
 
     // Применяем сортировку
@@ -172,41 +155,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
   }
 
-  /// Показать фильтры
-  void _showFilters() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => _buildFiltersBottomSheet(),
-    );
-  }
-
-  /// Сбросить фильтры
-  void _resetFilters() {
-    setState(() {
-      _selectedTimerType = null;
-      _searchQuery = '';
-      _selectedDateRange = null;
-      _showOnlyLinked = false;
-      _sortType = _SortType.dateDesc;
-      _searchController.clear();
-    });
-    _applyFilters();
-  }
-
   /// Получить цвет для типа таймера
   Color _getTimerTypeColor(TimerType timerType) {
     switch (timerType) {
       case TimerType.classic:
         return const Color(0xFF2196F3);
-      case TimerType.interval1:
+      case TimerType.intervalWithRest:
         return const Color(0xFF4CAF50);
-      case TimerType.interval2:
+      case TimerType.fixedRounds:
         return const Color(0xFFFF9800);
       case TimerType.intensive:
         return const Color(0xFFE91E63);
-      case TimerType.norest:
+      case TimerType.noRest:
         return const Color(0xFFFF5722);
       case TimerType.countdown:
         return const Color(0xFF9C27B0);
@@ -218,13 +178,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
     switch (timerType) {
       case TimerType.classic:
         return Icons.timer_outlined;
-      case TimerType.interval1:
+      case TimerType.intervalWithRest:
         return Icons.repeat;
-      case TimerType.interval2:
+      case TimerType.fixedRounds:
         return Icons.schedule;
       case TimerType.intensive:
         return Icons.fitness_center;
-      case TimerType.norest:
+      case TimerType.noRest:
         return Icons.flash_on;
       case TimerType.countdown:
         return Icons.hourglass_bottom;
@@ -236,13 +196,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
     switch (timerType) {
       case TimerType.classic:
         return 'Классический';
-      case TimerType.interval1:
+      case TimerType.intervalWithRest:
         return 'Интервальный';
-      case TimerType.interval2:
+      case TimerType.fixedRounds:
         return 'Фиксированный';
       case TimerType.intensive:
         return 'Интенсивный';
-      case TimerType.norest:
+      case TimerType.noRest:
         return 'Без отдыха';
       case TimerType.countdown:
         return 'Обратный отсчет';
@@ -282,41 +242,29 @@ class _HistoryScreenState extends State<HistoryScreen> {
         centerTitle: true,
         actions: [
           // Кнопка фильтров
-          IconButton(
-            icon: Stack(
-              children: [
-                Icon(
-                  Icons.filter_list,
-                  color: customTheme.textPrimaryColor,
-                ),
-                // Индикатор активных фильтров
-                if (_hasActiveFilters())
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: customTheme.buttonPrimaryColor,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-              ],
+          PopupMenuButton<TimerType?>(
+            icon: Icon(
+              Icons.filter_list,
+              color: customTheme.textPrimaryColor,
             ),
-            onPressed: _showFilters,
-          ),
-
-          // Кнопка сброса фильтров
-          if (_hasActiveFilters())
-            IconButton(
-              icon: Icon(
-                Icons.clear,
-                color: customTheme.errorColor,
+            onSelected: (timerType) {
+              setState(() {
+                _selectedTimerType = timerType;
+              });
+              _applyFilters();
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: null,
+                child: Text('Все типы'),
               ),
-              onPressed: _resetFilters,
-            ),
+              const PopupMenuDivider(),
+              ...TimerType.values.map((type) => PopupMenuItem(
+                value: type,
+                child: Text(_getTimerTypeName(type)),
+              )),
+            ],
+          ),
         ],
       ),
 
@@ -406,30 +354,24 @@ class _HistoryScreenState extends State<HistoryScreen> {
           Expanded(
             child: _filteredSessions.isEmpty
                 ? _buildEmptyState()
-                : ListView.builder(
-              padding: EdgeInsets.all(screenWidth * UIConfig.containerOuterPaddingFactor),
-              itemCount: _filteredSessions.length,
-              itemBuilder: (context, index) {
-                final session = _filteredSessions[index];
-                return SlideUpAnimation(
-                  delay: Duration(milliseconds: index * 50),
-                  child: _buildSessionCard(session, index),
-                );
-              },
+                : RefreshIndicator(
+              onRefresh: _loadHistory,
+              child: ListView.builder(
+                padding: EdgeInsets.all(screenWidth * UIConfig.containerOuterPaddingFactor),
+                itemCount: _filteredSessions.length,
+                itemBuilder: (context, index) {
+                  final session = _filteredSessions[index];
+                  return SlideUpAnimation(
+                    delay: Duration(milliseconds: index * 50),
+                    child: _buildSessionCard(session, index),
+                  );
+                },
+              ),
             ),
           ),
         ],
       ),
     );
-  }
-
-  /// Проверить есть ли активные фильтры
-  bool _hasActiveFilters() {
-    return _selectedTimerType != null ||
-        _searchQuery.isNotEmpty ||
-        _selectedDateRange != null ||
-        _showOnlyLinked ||
-        _sortType != _SortType.dateDesc;
   }
 
   /// Построить карточку тренировки
@@ -674,94 +616,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
             ),
             textAlign: TextAlign.center,
           ),
-          if (_hasActiveFilters()) ...[
+          if (_selectedTimerType != null || _searchQuery.isNotEmpty) ...[
             SizedBox(height: screenHeight * 0.03),
             SecondaryButton(
               text: 'Сбросить фильтры',
               icon: Icons.clear,
-              onPressed: _resetFilters,
+              onPressed: () {
+                setState(() {
+                  _selectedTimerType = null;
+                  _searchQuery = '';
+                  _searchController.clear();
+                });
+                _applyFilters();
+              },
             ),
           ],
-        ],
-      ),
-    );
-  }
-
-  /// Построить панель фильтров
-  Widget _buildFiltersBottomSheet() {
-    final theme = Theme.of(context);
-    final customTheme = theme.extension<CustomThemeExtension>()!;
-    final screenHeight = MediaQuery.of(context).size.height;
-
-    return Container(
-      height: screenHeight * 0.6,
-      decoration: BoxDecoration(
-        color: customTheme.cardColor,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(20),
-        ),
-      ),
-      child: Column(
-        children: [
-          // Заголовок
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.filter_list,
-                  color: customTheme.buttonPrimaryColor,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Фильтры и сортировка',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: customTheme.textPrimaryColor,
-                  ),
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    _resetFilters();
-                  },
-                  child: Text('Сбросить'),
-                ),
-              ],
-            ),
-          ),
-
-          // Контент фильтров
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // TODO: Добавить фильтры по типу таймера, дате, etc.
-                  Text(
-                    'Фильтры будут добавлены в следующих версиях',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: customTheme.textSecondaryColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Кнопка применения
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: SizedBox(
-              width: double.infinity,
-              child: PrimaryButton(
-                text: 'Применить',
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ),
-          ),
         ],
       ),
     );
