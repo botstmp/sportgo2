@@ -11,7 +11,7 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../core/services/localization_service.dart';
 import '../../../features/timers/screens/timer_setup_screen.dart';
 import '../../../core/providers/timer_provider.dart';
-
+import 'workout_selection_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 // import '../../../core/providers/settings_provider.dart';
@@ -419,6 +419,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   }
 
   /// Запуск выбранного таймера
+  /// Запуск выбранного таймера
   void _startTimer() {
     if (_selectedTimerType == null) return;
 
@@ -447,10 +448,10 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         timerType = TimerType.classic;
     }
 
-    // Переходим к экрану настройки таймера
+    // ИЗМЕНЕНО: Переходим к экрану выбора тренировки вместо настройки таймера
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => TimerSetupScreen(timerType: timerType),
+        builder: (context) => WorkoutSelectionScreen(timerType: timerType),
       ),
     );
   }
