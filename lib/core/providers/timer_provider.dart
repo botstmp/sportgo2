@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import '../constants/ui_config.dart';
 import '../enums/timer_enums.dart';
 import '../../l10n/generated/app_localizations.dart';
+// ДОБАВЛЕННЫЕ ИМПОРТЫ:
+import '../models/workout_session.dart';
+import '../services/workout_history_service.dart';
 
 /// Провайдер для управления таймерами SportOn
 class TimerProvider with ChangeNotifier {
@@ -12,6 +15,14 @@ class TimerProvider with ChangeNotifier {
   TimerState _state = TimerState.stopped;
   TimerType _type = TimerType.classic;
   AppLocalizations? _localizations;
+
+  // ДОБАВЛЕННЫЕ ПОЛЯ ДЛЯ ИСТОРИИ:
+  final WorkoutHistoryService _historyService = WorkoutHistoryService();
+
+  // Данные для привязки к тренировке (опционально)
+  String? _linkedWorkoutCode;
+  String? _linkedWorkoutTitle;
+  String? _userNotes;
 
   // Настройки таймера
   int _workDuration = 60;     // Время работы в секундах
@@ -187,6 +198,56 @@ class TimerProvider with ChangeNotifier {
 
   /// Проверка, завершен ли таймер
   bool get isFinished => _state == TimerState.finished;
+
+  // === МЕТОДЫ ДЛЯ ПРИВЯЗКИ К ТРЕНИРОВКЕ ===
+
+  /// Установить привязку к тренировке
+  void setWorkoutLink({
+    String? workoutCode,
+    String? workoutTitle,
+    String? userNotes,
+  }) {
+    if (_state == TimerState.stopped) {
+      _linkedWorkoutCode = workoutCode;
+      _linkedWorkoutTitle = workoutTitle;
+      _userNotes = userNotes;
+      print('🏷️ TimerProvider: Workout linked - Code: $workoutCode, Title: $workoutTitle');
+      notifyListeners();
+    }
+  }
+
+  /// Очистить привязку к тренировке
+  void clearWorkoutLink() {
+    _linkedWorkoutCode = null;
+    _linkedWorkoutTitle = null;
+    _userNotes = null;
+    print('🏷️ TimerProvider: Workout link cleared');
+    notifyListeners();
+  }
+
+  /// Получить информацию о привязанной тренировке
+  Map<String, String?> getWorkoutLinkInfo() {
+    return {
+      'workoutCode': _linkedWorkoutCode,
+      'workoutTitle': _linkedWorkoutTitle,
+      'userNotes': _userNotes,
+    };
+  }
+
+  /// Проверить есть ли привязка к тренировке
+  bool get hasWorkoutLink => _linkedWorkoutCode != null || _linkedWorkoutTitle != null;
+
+  /// Получить отображаемое название привязанной тренировки
+  String? get linkedWorkoutDisplayName {
+    if (_linkedWorkoutCode != null && _linkedWorkoutTitle != null) {
+      return '$_linkedWorkoutCode "$_linkedWorkoutTitle"';
+    } else if (_linkedWorkoutCode != null) {
+      return _linkedWorkoutCode;
+    } else if (_linkedWorkoutTitle != null) {
+      return _linkedWorkoutTitle;
+    }
+    return null;
+  }
 
   // === МЕТОДЫ НАСТРОЙКИ ===
 
@@ -435,7 +496,46 @@ class TimerProvider with ChangeNotifier {
     _endTime = DateTime.now();
     _currentTime = 0;
     _stateBeforePause = null; // ДОБАВЛЕНО: Очищаем состояние до паузы
+
+    // ДОБАВЛЕНО: Автоматическое сохранение
+    _saveWorkoutSession();
+
     notifyListeners();
+  }
+
+  /// Автоматическое сохранение завершенной тренировки
+  Future<void> _saveWorkoutSession() async {
+    try {
+      // Создаем сессию из текущего состояния
+      final session = WorkoutSession.fromTimerProvider(
+        this,
+        workoutCode: _linkedWorkoutCode,
+        workoutTitle: _linkedWorkoutTitle,
+        userNotes: _userNotes,
+      );
+
+      // Сохраняем в историю
+      final success = await _historyService.saveWorkoutSession(session);
+
+      if (success) {
+        print('✅ TimerProvider: Workout session auto-saved - ${session.displayName}');
+
+        // Проверяем на рекорд (только для привязанных тренировок)
+        if (session.isLinkedWorkout) {
+          final recordResult = await _historyService.checkForRecord(session);
+          if (recordResult.isRecord) {
+            print('🏆 TimerProvider: NEW RECORD! ${recordResult.message}');
+            // Здесь можно добавить уведомление о рекорде
+          } else if (recordResult.isFirstAttempt) {
+            print('🎯 TimerProvider: First attempt for this workout!');
+          }
+        }
+      } else {
+        print('❌ TimerProvider: Failed to auto-save workout session');
+      }
+    } catch (e) {
+      print('❌ TimerProvider: Error during auto-save - $e');
+    }
   }
 
   /// Сбросить таймер
@@ -446,6 +546,10 @@ class TimerProvider with ChangeNotifier {
     _totalWorkTime = 0;
     _totalRestTime = 0;
     _lapTimes.clear();
+
+    // ДОБАВЛЕНО: Очистка привязки
+    clearWorkoutLink();
+
     notifyListeners();
   }
 
@@ -479,6 +583,12 @@ class TimerProvider with ChangeNotifier {
       'endTime': _endTime?.toIso8601String(),
       'totalDuration': totalDuration?.inSeconds,
       'isCompleted': _state == TimerState.finished,
+      // ДОБАВЛЕНО: Информация о привязке
+      'linkedWorkoutCode': _linkedWorkoutCode,
+      'linkedWorkoutTitle': _linkedWorkoutTitle,
+      'userNotes': _userNotes,
+      'hasWorkoutLink': hasWorkoutLink,
+      'lapTimes': _lapTimes.map((lap) => lap.time).toList(),
     };
   }
 
