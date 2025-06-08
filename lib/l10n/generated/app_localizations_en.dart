@@ -270,7 +270,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stopwatchTitle => 'Stopwatch';
 
   @override
-  String get stopwatchDescription => 'Classic stopwatch with lap time capability (rounds)';
+  String get stopwatchDescription => 'Free-form timing with lap recording. Perfect for unrestricted workouts.';
 
   @override
   String get workTime => 'Work Time';

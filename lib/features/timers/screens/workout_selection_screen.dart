@@ -64,11 +64,14 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
       // Загружаем карту кодов для автодополнения
       final codes = await _historyService.getWorkoutCodesMap();
 
-      // ИСПРАВЛЕНО: Используем новый метод для получения недавних тренировок
-      final recentWorkouts = await _historyService.getRecentWorkoutKeysByTimerType(
-        widget.timerType,
-        limit: 5,
-      );
+      // Загружаем недавние тренировки этого типа
+      final recentSessions = await _historyService.getSessionsByTimerType(widget.timerType);
+      final recentWorkouts = recentSessions
+          .where((session) => session.isLinkedWorkout)
+          .map((session) => session.workoutKey)
+          .toSet()
+          .take(5)
+          .toList();
 
       setState(() {
         _workoutCodes = codes;
@@ -100,20 +103,20 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
 
   /// Выбрать недавнюю тренировку
   void _selectRecentWorkout(String workoutKey) {
-    setState(() {
-      _selectedWorkoutKey = workoutKey;
-
-      // ИСПРАВЛЕНО: Улучшена логика разбора ключа тренировки
-      // Если есть код в карте кодов, разделяем на код и название
-      if (_workoutCodes.containsKey(workoutKey)) {
-        _codeController.text = workoutKey;
-        _titleController.text = _workoutCodes[workoutKey]!;
-      } else {
-        // Иначе это просто название тренировки
-        _codeController.clear();
-        _titleController.text = workoutKey;
-      }
-    });
+    // Пытаемся разобрать ключ на код и название
+    final sessions = _recentWorkouts.where((key) => key == workoutKey);
+    if (sessions.isNotEmpty) {
+      setState(() {
+        _selectedWorkoutKey = workoutKey;
+        if (_workoutCodes.containsKey(workoutKey)) {
+          _codeController.text = workoutKey;
+          _titleController.text = _workoutCodes[workoutKey]!;
+        } else {
+          _codeController.clear();
+          _titleController.text = workoutKey;
+        }
+      });
+    }
   }
 
   /// Продолжить с выбранной тренировкой

@@ -1,11 +1,12 @@
 // lib/core/models/workout_session.dart
-import '../models/workout_models.dart'; // TimerType здесь
+import '../enums/timer_enums.dart';        // TimerType и TimerState здесь
+import '../providers/timer_provider.dart'; // TimerProvider здесь
 import 'workout_enums.dart';
 import 'classic_timer_stats.dart';
 
 /// Основная модель сессии тренировки
 class WorkoutSession {
-  final String? id;                        // Уникальный ID сессии (nullable для новых)
+  final String id;                         // Уникальный ID сессии
   final TimerType timerType;               // Тип таймера
   final DateTime startTime;                // Время начала
   final DateTime endTime;                  // Время окончания
@@ -35,7 +36,7 @@ class WorkoutSession {
   final int version;                       // Версия модели данных
 
   const WorkoutSession({
-    this.id,
+    required this.id,
     required this.timerType,
     required this.startTime,
     required this.endTime,
@@ -56,14 +57,14 @@ class WorkoutSession {
   });
 
   /// Создание сессии из TimerProvider при завершении тренировки
-  factory WorkoutSession.fromTimerResults(
-      Map<String, dynamic> timerResults, {
+  factory WorkoutSession.fromTimerProvider(
+      TimerProvider timerProvider, {
         String? workoutCode,
         String? workoutTitle,
         String? userNotes,
       }) {
     final now = DateTime.now();
-    final sessionId = '${now.millisecondsSinceEpoch}_timer';
+    final sessionId = '${now.millisecondsSinceEpoch}_${timerProvider.type.name}';
 
     // Определяем тип привязки к тренировке
     WorkoutLinkType linkType = WorkoutLinkType.none;
@@ -75,46 +76,32 @@ class WorkoutSession {
       linkType = WorkoutLinkType.byTitle;
     }
 
-    // Получаем тип таймера
-    final timerType = TimerType.fromId(timerResults['type'] ?? 'classic');
-
-    // Парсим времена
-    final startTime = timerResults['startTime'] != null
-        ? DateTime.parse(timerResults['startTime'])
-        : now.subtract(Duration(seconds: timerResults['totalDuration'] ?? 0));
-    final endTime = timerResults['endTime'] != null
-        ? DateTime.parse(timerResults['endTime'])
-        : now;
-
     // Создаем статистику для классического таймера
     ClassicTimerStats? classicStats;
-    if (timerType == TimerType.classic && timerResults['lapTimes'] != null) {
-      final lapTimes = (timerResults['lapTimes'] as List<dynamic>)
-          .map((seconds) => Duration(seconds: seconds))
+    if (timerProvider.type == TimerType.classic) {
+      // Получаем отсечки из TimerProvider
+      final lapTimes = timerProvider.lapTimes
+          .map((lap) => Duration(seconds: lap.time))
           .toList();
-      if (lapTimes.isNotEmpty) {
-        classicStats = ClassicTimerStats.fromLapTimes(lapTimes);
-      }
+      classicStats = ClassicTimerStats.fromLapTimes(lapTimes);
     }
 
     return WorkoutSession(
       id: sessionId,
-      timerType: timerType,
-      startTime: startTime,
-      endTime: endTime,
-      totalDuration: Duration(seconds: timerResults['totalDuration'] ?? 0),
-      status: timerResults['isCompleted'] == true
-          ? WorkoutStatus.completed
-          : WorkoutStatus.stopped,
+      timerType: timerProvider.type,
+      startTime: timerProvider.startTime ?? now,
+      endTime: timerProvider.endTime ?? now,
+      totalDuration: timerProvider.totalDuration ?? Duration.zero,
+      status: timerProvider.isFinished ? WorkoutStatus.completed : WorkoutStatus.stopped,
       workoutCode: workoutCode,
       workoutTitle: workoutTitle,
       linkType: linkType,
       userNotes: userNotes,
-      configuration: Map<String, dynamic>.from(timerResults),
-      workTime: Duration(seconds: timerResults['totalWorkTime'] ?? 0),
-      restTime: Duration(seconds: timerResults['totalRestTime'] ?? 0),
-      pauseTime: Duration.zero, // TODO: добавить отслеживание пауз
-      roundsCompleted: timerResults['completedRounds'] ?? 1,
+      configuration: timerProvider.getTimerSettings(),
+      workTime: Duration(seconds: timerProvider.totalWorkTime),
+      restTime: Duration(seconds: timerProvider.totalRestTime),
+      pauseTime: Duration.zero, // TODO: добавить отслеживание пауз в TimerProvider
+      roundsCompleted: timerProvider.currentRound,
       classicStats: classicStats,
       createdAt: now,
     );
@@ -167,14 +154,14 @@ class WorkoutSession {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'timer_type': timerType.id,
+      'timer_type': timerType.name,
       'start_time': startTime.millisecondsSinceEpoch,
       'end_time': endTime.millisecondsSinceEpoch,
       'total_duration': totalDuration.inMilliseconds,
-      'status': status.id,
+      'status': status.name,
       'workout_code': workoutCode,
       'workout_title': workoutTitle,
-      'link_type': linkType.id,
+      'link_type': linkType.name,
       'user_notes': userNotes,
       'configuration': configuration,
       'work_time': workTime.inMilliseconds,
@@ -201,14 +188,23 @@ class WorkoutSession {
 
     return WorkoutSession(
       id: json['id'],
-      timerType: TimerType.fromId(json['timer_type'] ?? 'classic'),
+      timerType: TimerType.values.firstWhere(
+            (type) => type.name == json['timer_type'],
+        orElse: () => TimerType.classic,
+      ),
       startTime: DateTime.fromMillisecondsSinceEpoch(json['start_time']),
       endTime: DateTime.fromMillisecondsSinceEpoch(json['end_time']),
       totalDuration: Duration(milliseconds: json['total_duration']),
-      status: WorkoutStatus.fromId(json['status'] ?? 'completed'),
+      status: WorkoutStatus.values.firstWhere(
+            (status) => status.name == json['status'],
+        orElse: () => WorkoutStatus.completed,
+      ),
       workoutCode: json['workout_code'],
       workoutTitle: json['workout_title'],
-      linkType: WorkoutLinkType.fromId(json['link_type'] ?? 'none'),
+      linkType: WorkoutLinkType.values.firstWhere(
+            (type) => type.name == json['link_type'],
+        orElse: () => WorkoutLinkType.none,
+      ),
       userNotes: json['user_notes'],
       configuration: Map<String, dynamic>.from(json['configuration'] ?? {}),
       workTime: Duration(milliseconds: json['work_time']),
@@ -228,7 +224,7 @@ class WorkoutSession {
     } else if (workoutTitle != null) {
       return workoutTitle!;
     } else {
-      return 'FREE_${timerType.id}';
+      return 'FREE_${timerType.name}';
     }
   }
 
@@ -266,7 +262,7 @@ class WorkoutSession {
 
   @override
   String toString() {
-    return 'WorkoutSession(${displayName}, ${timerType.id}, $formattedDuration)';
+    return 'WorkoutSession(${displayName}, ${timerType.name}, $formattedDuration)';
   }
 
   @override

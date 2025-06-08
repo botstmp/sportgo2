@@ -599,16 +599,16 @@ abstract class AppLocalizations {
   /// **'Unknown Theme'**
   String get unknownTheme;
 
-  /// Stopwatch Title
+  /// Stopwatch timer title
   ///
   /// In en, this message translates to:
   /// **'Stopwatch'**
   String get stopwatchTitle;
 
-  /// Stopwatch Description
+  /// Stopwatch timer description
   ///
   /// In en, this message translates to:
-  /// **'Classic stopwatch with lap time capability (rounds)'**
+  /// **'Free-form timing with lap recording. Perfect for unrestricted workouts.'**
   String get stopwatchDescription;
 
   /// Work time label
@@ -617,7 +617,7 @@ abstract class AppLocalizations {
   /// **'Work Time'**
   String get workTime;
 
-  /// Work state label
+  /// Work state
   ///
   /// In en, this message translates to:
   /// **'Work'**
@@ -647,25 +647,25 @@ abstract class AppLocalizations {
   /// **'rounds'**
   String get roundPluralMany;
 
-  /// Preparation state label
+  /// Preparation state
   ///
   /// In en, this message translates to:
   /// **'Preparation'**
   String get preparation;
 
-  /// Paused state label
+  /// Paused state
   ///
   /// In en, this message translates to:
   /// **'Paused'**
   String get paused;
 
-  /// Finished state label
+  /// Finished state
   ///
   /// In en, this message translates to:
   /// **'Finished'**
   String get finished;
 
-  /// Stopped state label
+  /// Stopped state
   ///
   /// In en, this message translates to:
   /// **'Stopped'**

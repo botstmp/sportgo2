@@ -1012,6 +1012,41 @@
   "close": "Close",
   "@close": {
     "description": "Close button text"
+  },
+
+  "preparation": "Preparation",
+  "@preparation": {
+    "description": "Preparation state"
+  },
+
+  "work": "Work",
+  "@work": {
+    "description": "Work state"
+  },
+
+  "paused": "Paused",
+  "@paused": {
+    "description": "Paused state"
+  },
+
+  "finished": "Finished",
+  "@finished": {
+    "description": "Finished state"
+  },
+
+  "stopped": "Stopped",
+  "@stopped": {
+    "description": "Stopped state"
+  },
+
+  "stopwatchTitle": "Stopwatch",
+  "@stopwatchTitle": {
+    "description": "Stopwatch timer title"
+  },
+
+  "stopwatchDescription": "Free-form timing with lap recording. Perfect for unrestricted workouts.",
+  "@stopwatchDescription": {
+    "description": "Stopwatch timer description"
   }
 
 }

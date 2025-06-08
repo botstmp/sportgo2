@@ -38,7 +38,7 @@ extension RecordTypeUIExtension on RecordType {
     switch (this) {
       case RecordType.fastestTime:
         return Icons.speed;
-      case RecordType.mostLaps:
+      case RecordType.mostRounds: // ИСПРАВЛЕНО: было mostLaps
         return Icons.repeat;
       case RecordType.longestSession:
         return Icons.timer;
@@ -46,6 +46,8 @@ extension RecordTypeUIExtension on RecordType {
         return Icons.trending_up;
       case RecordType.perfectRounds:
         return Icons.diamond;
+      case RecordType.personalBest: // ДОБАВЛЕНО: отсутствующий case
+        return Icons.emoji_events;
     }
   }
 
@@ -54,7 +56,7 @@ extension RecordTypeUIExtension on RecordType {
     switch (this) {
       case RecordType.fastestTime:
         return const Color(0xFFFFD700); // Золотой
-      case RecordType.mostLaps:
+      case RecordType.mostRounds: // ИСПРАВЛЕНО: было mostLaps
         return const Color(0xFFC0C0C0); // Серебряный
       case RecordType.longestSession:
         return const Color(0xFF9C27B0); // Фиолетовый
@@ -62,6 +64,8 @@ extension RecordTypeUIExtension on RecordType {
         return const Color(0xFFCD7F32); // Бронзовый
       case RecordType.perfectRounds:
         return const Color(0xFF00BCD4); // Циан
+      case RecordType.personalBest: // ДОБАВЛЕНО: отсутствующий case
+        return const Color(0xFFFFD700); // Золотой
     }
   }
 }

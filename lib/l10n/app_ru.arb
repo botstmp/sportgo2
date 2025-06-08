@@ -787,6 +787,40 @@
   "close": "Закрыть",
   "@close": {
     "description": "Текст кнопки закрытия"
+  },
+  "preparation": "Подготовка",
+  "@preparation": {
+    "description": "Состояние подготовки"
+  },
+
+  "work": "Работа",
+  "@work": {
+    "description": "Состояние работы"
+  },
+
+  "paused": "Пауза",
+  "@paused": {
+    "description": "Состояние паузы"
+  },
+
+  "finished": "Завершено",
+  "@finished": {
+    "description": "Состояние завершения"
+  },
+
+  "stopped": "Остановлено",
+  "@stopped": {
+    "description": "Состояние остановки"
+  },
+
+  "stopwatchTitle": "Секундомер",
+  "@stopwatchTitle": {
+    "description": "Название таймера-секундомера"
+  },
+
+  "stopwatchDescription": "Произвольный хронометраж с записью кругов. Идеально для свободных тренировок.",
+  "@stopwatchDescription": {
+    "description": "Описание таймера-секундомера"
   }
 
 }

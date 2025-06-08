@@ -270,7 +270,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get stopwatchTitle => 'Секундомер';
 
   @override
-  String get stopwatchDescription => 'Классический секундомер с возможностью отсечек времени (раундов)';
+  String get stopwatchDescription => 'Произвольный хронометраж с записью кругов. Идеально для свободных тренировок.';
 
   @override
   String get workTime => 'Время работы';
@@ -300,7 +300,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get finished => 'Завершено';
 
   @override
-  String get stopped => 'Остановлен';
+  String get stopped => 'Остановлено';
 
   @override
   String get stopWorkoutQuestion => 'Остановить тренировку?';
