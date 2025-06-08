@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../core/services/workout_history_service.dart';
 import '../../../core/models/workout_session.dart';
 import '../../../core/models/workout_enums.dart';
-import '../../../core/models/workout_models.dart';
+import '../../../core/enums/timer_enums.dart'; // ИСПРАВЛЕНО: Используем правильный TimerType
+// import '../../../core/models/workout_models.dart'; // УБРАНО: Конфликтующий импорт
 import '../../../core/constants/ui_config.dart';
 import '../../../shared/themes/app_themes.dart';
 import '../../../shared/widgets/buttons/custom_buttons.dart';
@@ -160,13 +161,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
     switch (timerType) {
       case TimerType.classic:
         return const Color(0xFF2196F3);
-      case TimerType.intervalWithRest:
+      case TimerType.interval1: // ИСПРАВЛЕНО: Используем правильные константы
         return const Color(0xFF4CAF50);
-      case TimerType.fixedRounds:
+      case TimerType.interval2: // ИСПРАВЛЕНО: Используем правильные константы
         return const Color(0xFFFF9800);
       case TimerType.intensive:
         return const Color(0xFFE91E63);
-      case TimerType.noRest:
+      case TimerType.norest: // ИСПРАВЛЕНО: Используем правильные константы
         return const Color(0xFFFF5722);
       case TimerType.countdown:
         return const Color(0xFF9C27B0);
@@ -178,13 +179,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
     switch (timerType) {
       case TimerType.classic:
         return Icons.timer_outlined;
-      case TimerType.intervalWithRest:
+      case TimerType.interval1: // ИСПРАВЛЕНО: Используем правильные константы
         return Icons.repeat;
-      case TimerType.fixedRounds:
+      case TimerType.interval2: // ИСПРАВЛЕНО: Используем правильные константы
         return Icons.schedule;
       case TimerType.intensive:
         return Icons.fitness_center;
-      case TimerType.noRest:
+      case TimerType.norest: // ИСПРАВЛЕНО: Используем правильные константы
         return Icons.flash_on;
       case TimerType.countdown:
         return Icons.hourglass_bottom;
@@ -196,13 +197,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
     switch (timerType) {
       case TimerType.classic:
         return 'Классический';
-      case TimerType.intervalWithRest:
-        return 'Интервальный';
-      case TimerType.fixedRounds:
-        return 'Фиксированный';
+      case TimerType.interval1: // ИСПРАВЛЕНО: Используем правильные константы
+        return 'Интервальный 1';
+      case TimerType.interval2: // ИСПРАВЛЕНО: Используем правильные константы
+        return 'Интервальный 2';
       case TimerType.intensive:
         return 'Интенсивный';
-      case TimerType.noRest:
+      case TimerType.norest: // ИСПРАВЛЕНО: Используем правильные константы
         return 'Без отдыха';
       case TimerType.countdown:
         return 'Обратный отсчет';

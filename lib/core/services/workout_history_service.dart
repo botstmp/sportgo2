@@ -274,15 +274,15 @@ class WorkoutHistoryService {
       if (newSession.timerType == TimerType.classic && newSession.classicStats != null) {
         final newStats = newSession.classicStats!;
 
-        // Рекорд по количеству отсечек
-        final maxPreviousLaps = otherSessions
+        // Рекорд по количеству раундов (ИСПРАВЛЕНО: mostRounds вместо mostLaps)
+        final maxPreviousRounds = otherSessions
             .where((session) => session.classicStats != null)
             .map((session) => session.classicStats!.totalLaps)
             .fold(0, (max, laps) => laps > max ? laps : max);
 
-        if (newStats.totalLaps > maxPreviousLaps) {
-          print('🏆 WorkoutHistoryService: NEW LAP RECORD for "${newSession.workoutKey}"! ${newStats.totalLaps} laps');
-          return RecordCheckResult.newRecord(RecordType.mostLaps, newStats.totalLaps - maxPreviousLaps);
+        if (newStats.totalLaps > maxPreviousRounds) {
+          print('🏆 WorkoutHistoryService: NEW ROUND RECORD for "${newSession.workoutKey}"! ${newStats.totalLaps} rounds');
+          return RecordCheckResult.newRecord(RecordType.mostRounds, newStats.totalLaps - maxPreviousRounds);
         }
 
         // Рекорд по стабильности
@@ -464,14 +464,14 @@ class WorkoutSpecificStats {
       bestTime: bestTime,
       averageTime: averageTime,
       worstTime: worstTime,
-      firstAttempt: sessions.first.startTime,  // ИСПРАВЛЕНО: DateTime
-      lastAttempt: sessions.last.startTime,    // ИСПРАВЛЕНО: DateTime
+      firstAttempt: sessions.first.startTime,
+      lastAttempt: sessions.last.startTime,
       recentTimes: recentTimes,
     );
   }
 
   factory WorkoutSpecificStats.empty() {
-    final now = DateTime.now(); // ИСПРАВЛЕНО: Используем DateTime.now()
+    final now = DateTime.now();
 
     return WorkoutSpecificStats(
       workoutKey: '',
@@ -480,8 +480,8 @@ class WorkoutSpecificStats {
       bestTime: Duration.zero,
       averageTime: Duration.zero,
       worstTime: Duration.zero,
-      firstAttempt: now,          // ИСПРАВЛЕНО: DateTime
-      lastAttempt: now,           // ИСПРАВЛЕНО: DateTime
+      firstAttempt: now,
+      lastAttempt: now,
       recentTimes: const [],
     );
   }
