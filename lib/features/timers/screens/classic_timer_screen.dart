@@ -2,9 +2,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../core/providers/timer_provider.dart';
 import '../../../core/enums/timer_enums.dart';
 import '../../../core/constants/ui_config.dart';
+import '../../../core/services/workout_history_service.dart';
+import '../../../core/models/workout_session.dart';
+import '../../../core/models/workout_enums.dart';
 import '../../../shared/themes/app_themes.dart';
 import '../../../shared/widgets/buttons/custom_buttons.dart';
 import '../../../shared/widgets/displays/circular_timer_widget.dart';
@@ -14,6 +18,7 @@ import '../../../shared/themes/timer_colors.dart';
 import '../../../shared/widgets/animations/animated_widgets.dart';
 import '../../../shared/widgets/dialogs/custom_dialogs.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../history/screens/history_screen.dart';
 
 /// Экран работающего таймера
 class ClassicTimerScreen extends StatefulWidget {
@@ -27,6 +32,7 @@ class _ClassicTimerScreenState extends State<ClassicTimerScreen>
     with TickerProviderStateMixin {
   late AnimationController _pulseController;
   late AnimationController _progressController;
+  final WorkoutHistoryService _historyService = WorkoutHistoryService();
 
   @override
   void initState() {
@@ -71,22 +77,421 @@ class _ClassicTimerScreenState extends State<ClassicTimerScreen>
   }
 
   void _onStopPressed(TimerProvider timerProvider, AppLocalizations l10n) async {
-    final shouldStop = await ConfirmationDialog.show(
-      context,
-      title: l10n.stopWorkoutQuestion,
-      message: l10n.stopWorkoutMessage,
-      confirmText: l10n.stop,
-      cancelText: l10n.continue_,
-      icon: Icons.stop,
-      iconColor: Theme.of(context).extension<CustomThemeExtension>()!.errorColor,
-      isDangerous: true,
-    );
+    // Останавливаем таймер сначала
+    timerProvider.pause();
+    _pulseController.stop();
 
-    if (shouldStop == true) {
+    // Показываем диалог выбора завершения
+    final result = await _showFinishDialog();
+
+    if (result != null) {
+      // Останавливаем таймер окончательно
       timerProvider.stop();
-      _pulseController.stop();
-      Navigator.of(context).pop();
+
+      if (result == 'save') {
+        // Сохраняем данные тренировки
+        await _saveWorkoutSession(timerProvider);
+      }
+
+      // Показываем сводный отчет
+      _showWorkoutSummary(timerProvider, l10n, result == 'save');
+    } else {
+      // Пользователь отменил - возобновляем таймер
+      timerProvider.start();
+      _startPulseAnimation();
     }
+  }
+
+  /// Показать диалог выбора завершения тренировки
+  Future<String?> _showFinishDialog() async {
+    final theme = Theme.of(context);
+    final customTheme = theme.extension<CustomThemeExtension>()!;
+
+    return await showDialog<String>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: customTheme.cardColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.stop_circle_outlined,
+                color: customTheme.errorColor,
+                size: 28,
+              ),
+              SizedBox(width: 12),
+              Text(
+                'Завершить тренировку?',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  color: customTheme.textPrimaryColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Выберите, что сделать с результатами тренировки:',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: customTheme.textSecondaryColor,
+                ),
+              ),
+              SizedBox(height: 24),
+
+              // Кнопка "Закончить и сохранить"
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.of(context).pop('save'),
+                  icon: Icon(Icons.save_outlined),
+                  label: Text('Закончить и сохранить'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: customTheme.successColor,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 12),
+
+              // Кнопка "Закончить без сохранения"
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.of(context).pop('no_save'),
+                  icon: Icon(Icons.close_outlined),
+                  label: Text('Закончить без сохранения'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: customTheme.errorColor,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// Сохранить сессию тренировки
+  Future<void> _saveWorkoutSession(TimerProvider timerProvider) async {
+    try {
+      final session = WorkoutSession.fromTimerProvider(
+        timerProvider,
+        workoutCode: null, // TODO: Добавить поддержку кодов тренировок
+        workoutTitle: _getWorkoutTitle(timerProvider),
+        userNotes: null, // TODO: Добавить поле для заметок пользователя
+      );
+
+      // Сохраняем в базу данных
+      final success = await _historyService.saveWorkoutSession(session);
+
+      if (success) {
+        print('Тренировка успешно сохранена');
+      } else {
+        print('Ошибка сохранения тренировки');
+      }
+    } catch (e) {
+      print('Ошибка при сохранении тренировки: $e');
+    }
+  }
+
+  /// Получить название тренировки
+  String _getWorkoutTitle(TimerProvider timerProvider) {
+    switch (timerProvider.type) {
+      case TimerType.classic:
+        return 'Классический секундомер';
+      case TimerType.interval1:
+        return 'Интервальная тренировка 1';
+      case TimerType.interval2:
+        return 'Интервальная тренировка 2';
+      case TimerType.intensive:
+        return 'Интенсивная тренировка';
+      case TimerType.norest:
+        return 'Тренировка без отдыха';
+      case TimerType.countdown:
+        return 'Обратный отсчет';
+    }
+  }
+
+  /// Показать сводный отчет о тренировке
+  void _showWorkoutSummary(TimerProvider timerProvider, AppLocalizations l10n, bool wasSaved) async {
+    final theme = Theme.of(context);
+    final customTheme = theme.extension<CustomThemeExtension>()!;
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    String summaryText = '';
+    if (timerProvider.type == TimerType.classic) {
+      summaryText = 'Общее время: ${timerProvider.formattedTime}\n';
+      if (timerProvider.lapTimes.isNotEmpty) {
+        summaryText += 'Раунды: ${timerProvider.lapTimes.length}\n';
+      }
+    } else {
+      summaryText = 'Время работы: ${(timerProvider.totalWorkTime ~/ 60)}:${(timerProvider.totalWorkTime % 60).toString().padLeft(2, '0')}\n'
+          'Время отдыха: ${(timerProvider.totalRestTime ~/ 60)}:${(timerProvider.totalRestTime % 60).toString().padLeft(2, '0')}\n'
+          'Раунды: ${timerProvider.currentRound}/${timerProvider.rounds}';
+    }
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: customTheme.cardColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.emoji_events,
+                color: customTheme.successColor,
+                size: 32,
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Тренировка завершена!',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: customTheme.textPrimaryColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (wasSaved) ...[
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: customTheme.successColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: customTheme.successColor.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.check_circle,
+                        color: customTheme.successColor,
+                        size: 20,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'Результаты сохранены в истории',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: customTheme.successColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 16),
+              ],
+
+              Text(
+                'Отличная работа! Вот краткий отчет:',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: customTheme.textSecondaryColor,
+                ),
+              ),
+              SizedBox(height: 12),
+
+              Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: customTheme.scaffoldBackgroundColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  summaryText,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: customTheme.textPrimaryColor,
+                    fontWeight: FontWeight.w500,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 20),
+
+              // Кнопки действий
+              Row(
+                children: [
+                  // Кнопка "Поделиться отчетом"
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _shareWorkoutReport(timerProvider),
+                      icon: Icon(Icons.share),
+                      label: Text('Поделиться'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: customTheme.buttonPrimaryColor,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(width: 12),
+
+                  // Кнопка "Сохранить" (неактивна если уже сохранено)
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: wasSaved ? null : () async {
+                        // Сохраняем тренировку если еще не сохранена
+                        Navigator.of(context).pop(); // Закрываем текущий диалог
+                        await _saveWorkoutSession(timerProvider);
+                        // Показываем диалог снова, но уже с пометкой о сохранении
+                        _showWorkoutSummary(timerProvider, l10n, true);
+                      },
+                      icon: Icon(wasSaved ? Icons.check : Icons.save),
+                      label: Text(wasSaved ? 'Сохранено' : 'Сохранить'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: wasSaved ? customTheme.textSecondaryColor : customTheme.successColor,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              SizedBox(height: 12),
+
+              // Кнопка "История тренировок"
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _navigateToHistory(),
+                  icon: Icon(Icons.history),
+                  label: Text('История тренировок'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: customTheme.textSecondaryColor,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 12),
+
+              // Кнопка "Закрыть"
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Закрываем диалог
+                    Navigator.of(context).popUntil((route) => route.isFirst); // Возвращаемся на главную
+                  },
+                  child: Text(
+                    'Закрыть',
+                    style: TextStyle(
+                      color: customTheme.textSecondaryColor,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// Поделиться отчетом о тренировке
+  void _shareWorkoutReport(TimerProvider timerProvider) {
+    final now = DateTime.now();
+    final date = '${now.day}.${now.month}.${now.year}';
+    final time = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
+    String reportText = '🏃‍♂️ Отчет о тренировке SportGo\n';
+    reportText += '📅 $date в $time\n\n';
+
+    // Тип тренировки
+    reportText += '⚡️ Тип: ${_getWorkoutTitle(timerProvider)}\n';
+
+    if (timerProvider.type == TimerType.classic) {
+      // Для классического таймера
+      reportText += '⏱️ Общее время: ${timerProvider.formattedTime}\n';
+
+      if (timerProvider.lapTimes.isNotEmpty) {
+        reportText += '🔄 Раунды: ${timerProvider.lapTimes.length}\n\n';
+
+        // Добавляем информацию о раундах
+        reportText += '📊 Подробности по раундам:\n';
+        for (int i = 0; i < timerProvider.lapTimes.length && i < 10; i++) {
+          final lap = timerProvider.lapTimes[i];
+          reportText += '   ${lap.lapNumber}. ${lap.formattedLapDuration}\n';
+        }
+
+        if (timerProvider.lapTimes.length > 10) {
+          reportText += '   ... и еще ${timerProvider.lapTimes.length - 10} раундов\n';
+        }
+      }
+    } else {
+      // Для интервальных таймеров
+      final workMinutes = timerProvider.totalWorkTime ~/ 60;
+      final workSeconds = timerProvider.totalWorkTime % 60;
+      final restMinutes = timerProvider.totalRestTime ~/ 60;
+      final restSeconds = timerProvider.totalRestTime % 60;
+
+      reportText += '💪 Время работы: ${workMinutes}:${workSeconds.toString().padLeft(2, '0')}\n';
+      reportText += '😌 Время отдыха: ${restMinutes}:${restSeconds.toString().padLeft(2, '0')}\n';
+      reportText += '🔄 Раунды: ${timerProvider.currentRound}/${timerProvider.rounds}\n';
+    }
+
+    reportText += '\n🎯 Отлично поработал! 💪\n';
+    reportText += '\n#SportGo #Тренировка #Фитнес';
+
+    // Делимся отчетом
+    Share.share(
+      reportText,
+      subject: 'Отчет о тренировке SportGo',
+    );
+  }
+
+  /// Навигация к экрану истории тренировок
+  void _navigateToHistory() {
+    Navigator.of(context).pop(); // Закрываем диалог
+    Navigator.of(context).popUntil((route) => route.isFirst); // Возвращаемся на главную
+
+    // Переходим к экрану истории
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const HistoryScreen(),
+      ),
+    );
   }
 
   void _startPulseAnimation() {
@@ -98,7 +503,7 @@ class _ClassicTimerScreenState extends State<ClassicTimerScreen>
     return TimerColors.getPrimaryColorForState(timerProvider.state);
   }
 
-  /// НОВЫЙ МЕТОД: Определяем какие кнопки показывать в зависимости от состояния
+  /// Определяем какие кнопки показывать в зависимости от состояния
   Widget _buildControlButtons(TimerProvider timerProvider, Color currentColor,
       CustomThemeExtension customTheme, double screenWidth, AppLocalizations l10n) {
 
@@ -107,7 +512,7 @@ class _ClassicTimerScreenState extends State<ClassicTimerScreen>
       return _buildPreparationControls(timerProvider, currentColor, screenWidth);
     }
 
-    // ДОБАВЛЕНО: Если на паузе И еще не начинали работать (только что было состояние подготовки)
+    // Если на паузе И еще не начинали работать (только что было состояние подготовки)
     // то тоже показываем упрощенные кнопки
     if (timerProvider.state == TimerState.paused && timerProvider.totalWorkTime == 0) {
       return _buildPreparationControls(timerProvider, currentColor, screenWidth);
@@ -158,13 +563,13 @@ class _ClassicTimerScreenState extends State<ClassicTimerScreen>
     );
   }
 
-  /// Полное управление для рабочих состояний (оригинальное)
+  /// Полное управление для рабочих состояний
   Widget _buildFullControls(TimerProvider timerProvider, Color currentColor,
       CustomThemeExtension customTheme, double screenWidth, AppLocalizations l10n) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        // Кнопка паузы (теперь маленькая, слева)
+        // Кнопка паузы (маленькая, слева)
         ScaleAnimation(
           delay: const Duration(milliseconds: 200),
           fromScale: 0.8,
@@ -177,7 +582,7 @@ class _ClassicTimerScreenState extends State<ClassicTimerScreen>
           ),
         ),
 
-        // Основная кнопка СТОП (теперь большая, в центре)
+        // Основная кнопка СТОП (большая, в центре)
         ScaleAnimation(
           delay: const Duration(milliseconds: 100),
           fromScale: 0.8,
@@ -252,13 +657,6 @@ class _ClassicTimerScreenState extends State<ClassicTimerScreen>
           _startPulseAnimation();
         } else if (!timerProvider.isRunning && _pulseController.isAnimating) {
           _pulseController.stop();
-        }
-
-        // Показываем диалог завершения
-        if (timerProvider.isFinished) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _showCompletionDialog(timerProvider, l10n);
-          });
         }
 
         return Scaffold(
@@ -361,13 +759,13 @@ class _ClassicTimerScreenState extends State<ClassicTimerScreen>
                                 ),
                               ),
 
-                              // ДОБАВЛЕНО: Информация о последней отсечке (только для классического таймера в рабочем состоянии)
+                              // Информация о последнем раунде
                               if (timerProvider.type == TimerType.classic &&
                                   timerProvider.state == TimerState.working &&
                                   timerProvider.lapTimes.isNotEmpty) ...[
                                 SizedBox(height: screenHeight * 0.01),
                                 Text(
-                                  '${l10n.lapTime} ${timerProvider.lapTimes.last.lapNumber}: ${timerProvider.lapTimes.last.formattedTime}',
+                                  'Раунд ${timerProvider.lapTimes.last.lapNumber}: ${timerProvider.lapTimes.last.formattedLapDuration}',
                                   style: theme.textTheme.bodyMedium?.copyWith(
                                     fontSize: screenHeight * UIConfig.subtitleFontSizeFactor * 0.9,
                                     color: currentColor.withOpacity(0.8),
@@ -423,7 +821,7 @@ class _ClassicTimerScreenState extends State<ClassicTimerScreen>
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // ИЗМЕНЕННАЯ ЧАСТЬ: Адаптивные кнопки управления
+                        // Адаптивные кнопки управления
                         _buildControlButtons(timerProvider, currentColor, customTheme, screenWidth, l10n),
 
                         SizedBox(height: screenHeight * 0.02),
@@ -453,13 +851,17 @@ class _ClassicTimerScreenState extends State<ClassicTimerScreen>
   }
 
   String _getStatusHint(TimerProvider timerProvider, AppLocalizations l10n) {
-    if (timerProvider.isRunning) {
-      return l10n.tapToPause;
-    } else if (timerProvider.isPaused) {
-      return l10n.tapToContinue;
-    } else {
-      return l10n.readyToStart;
+    if (timerProvider.state == TimerState.preparation ||
+        (timerProvider.state == TimerState.paused && timerProvider.totalWorkTime == 0)) {
+      return timerProvider.isRunning ? l10n.tapToPause : l10n.readyToStart;
     }
+
+    // Для основных кнопок во время работы показываем их назначение
+    if (timerProvider.isRunning || timerProvider.isPaused) {
+      return 'Пауза                 Закончить                 Раунд';
+    }
+
+    return l10n.readyToStart;
   }
 
   Widget _buildCircularTimer(TimerProvider timerProvider, Color currentColor) {
@@ -484,49 +886,16 @@ class _ClassicTimerScreenState extends State<ClassicTimerScreen>
   void _addLapTime(TimerProvider timerProvider) {
     timerProvider.addLapTime();
     HapticFeedback.selectionClick();
-
-    // УБРАНО: Черное информационное окно (SnackBar)
-    // Теперь информация показывается прямо в интерфейсе
-  }
-
-  void _showCompletionDialog(TimerProvider timerProvider, AppLocalizations l10n) {
-    final customTheme = Theme.of(context).extension<CustomThemeExtension>()!;
-
-    String message = '${l10n.greatJob}\n\n';
-
-    if (timerProvider.type == TimerType.classic) {
-      // Для классического таймера показываем общее время и отсечки
-      message += '${l10n.totalTime}: ${timerProvider.formattedTime}\n';
-      if (timerProvider.lapTimes.isNotEmpty) {
-        message += '${l10n.lapTimes}: ${timerProvider.lapTimes.length}\n';
-      }
-    } else {
-      // Для интервальных таймеров показываем статистику
-      message += '${l10n.workTime}: ${(timerProvider.totalWorkTime ~/ 60)}:${(timerProvider.totalWorkTime % 60).toString().padLeft(2, '0')}\n'
-          '${l10n.restTime}: ${(timerProvider.totalRestTime ~/ 60)}:${(timerProvider.totalRestTime % 60).toString().padLeft(2, '0')}\n'
-          '${l10n.roundsLabel}: ${timerProvider.currentRound}/${timerProvider.rounds}';
-    }
-
-    InfoDialog.show(
-      context,
-      title: l10n.workoutCompleted,
-      message: message,
-      buttonText: l10n.finish,
-      icon: Icons.emoji_events,
-      iconColor: customTheme.successColor,
-      onPressed: () {
-        Navigator.of(context).popUntil((route) => route.isFirst);
-      },
-    );
   }
 
   void _showTimerInfo(TimerProvider timerProvider, AppLocalizations l10n) {
     if (timerProvider.type == TimerType.classic) {
-      // Для классического таймера показываем отсечки времени
+      // ИСПРАВЛЕНО: Для классического таймера показываем раунды
+      // Используем LapTime из timer_provider.dart напрямую
       LapTimesDialog.show(
         context,
-        lapTimes: timerProvider.lapTimes,
-        totalTime: timerProvider.formattedTime,
+        lapTimes: timerProvider.lapTimes, // Используем данные напрямую из provider
+        title: 'Времена раундов',
       );
     } else {
       // Для интервальных таймеров показываем обычную информацию

@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import '../../../core/services/workout_history_service.dart';
 import '../../../core/models/workout_session.dart';
 import '../../../core/models/workout_enums.dart';
-import '../../../core/enums/timer_enums.dart'; // ИСПРАВЛЕНО: Используем правильный TimerType
-// import '../../../core/models/workout_models.dart'; // УБРАНО: Конфликтующий импорт
+import '../../../core/enums/timer_enums.dart';
 import '../../../core/constants/ui_config.dart';
 import '../../../shared/themes/app_themes.dart';
 import '../../../shared/widgets/buttons/custom_buttons.dart';
 import '../../../shared/widgets/animations/animated_widgets.dart';
 import '../../../shared/widgets/dialogs/custom_dialogs.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import 'session_detail_screen.dart'; // ДОБАВЛЕНО: Импорт экрана деталей
 
 /// Экран истории тренировок
 class HistoryScreen extends StatefulWidget {
@@ -54,35 +54,59 @@ class _HistoryScreenState extends State<HistoryScreen> {
     setState(() => _isLoading = true);
 
     try {
+      print('🔍 Загружаем историю тренировок...');
+
+      // Сначала проверим количество записей в БД
+      final count = await _historyService.getTotalSessionsCount();
+      print('🔍 Общее количество записей в БД: $count');
+
+      // Получаем информацию о БД
+      final dbInfo = await _historyService.getServiceInfo();
+      print('🔍 Информация о сервисе: $dbInfo');
+
       final sessions = await _historyService.getAllSessions();
+      print('🔍 Загружено сессий из сервиса: ${sessions.length}');
+
+      for (var session in sessions) {
+        print('🔍 Сессия: ${session.id} - ${session.displayName} - ${session.formattedDuration} - ${session.status}');
+      }
+
       setState(() {
         _allSessions = sessions;
         _applyFilters();
         _isLoading = false;
       });
-    } catch (e) {
-      print('Ошибка загрузки истории: $e');
+
+      print('🔍 Финальное состояние - всего: ${_allSessions.length}, отфильтровано: ${_filteredSessions.length}');
+    } catch (e, stackTrace) {
+      print('❌ Ошибка загрузки истории: $e');
+      print('❌ StackTrace: $stackTrace');
       setState(() => _isLoading = false);
     }
   }
 
   /// Применить фильтры и сортировку
   void _applyFilters() {
+    print('🔍 Применяем фильтры. Исходных сессий: ${_allSessions.length}');
     List<WorkoutSession> filtered = List.from(_allSessions);
 
     // Фильтр по типу таймера
     if (_selectedTimerType != null) {
+      print('🔍 Фильтруем по типу: $_selectedTimerType');
       filtered = filtered.where((session) => session.timerType == _selectedTimerType).toList();
+      print('🔍 После фильтра по типу: ${filtered.length}');
     }
 
     // Фильтр по поиску
     if (_searchQuery.isNotEmpty) {
+      print('🔍 Фильтруем по запросу: "$_searchQuery"');
       filtered = filtered.where((session) {
         final query = _searchQuery.toLowerCase();
         return (session.workoutCode?.toLowerCase().contains(query) ?? false) ||
             (session.workoutTitle?.toLowerCase().contains(query) ?? false) ||
             (session.userNotes?.toLowerCase().contains(query) ?? false);
       }).toList();
+      print('🔍 После фильтра по поиску: ${filtered.length}');
     }
 
     // Применяем сортировку
@@ -91,6 +115,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
     setState(() {
       _filteredSessions = filtered;
     });
+
+    print('🔍 Финальное количество отфильтрованных сессий: ${_filteredSessions.length}');
   }
 
   /// Применить сортировку
@@ -161,13 +187,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
     switch (timerType) {
       case TimerType.classic:
         return const Color(0xFF2196F3);
-      case TimerType.interval1: // ИСПРАВЛЕНО: Используем правильные константы
+      case TimerType.interval1:
         return const Color(0xFF4CAF50);
-      case TimerType.interval2: // ИСПРАВЛЕНО: Используем правильные константы
+      case TimerType.interval2:
         return const Color(0xFFFF9800);
       case TimerType.intensive:
         return const Color(0xFFE91E63);
-      case TimerType.norest: // ИСПРАВЛЕНО: Используем правильные константы
+      case TimerType.norest:
         return const Color(0xFFFF5722);
       case TimerType.countdown:
         return const Color(0xFF9C27B0);
@@ -179,13 +205,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
     switch (timerType) {
       case TimerType.classic:
         return Icons.timer_outlined;
-      case TimerType.interval1: // ИСПРАВЛЕНО: Используем правильные константы
+      case TimerType.interval1:
         return Icons.repeat;
-      case TimerType.interval2: // ИСПРАВЛЕНО: Используем правильные константы
+      case TimerType.interval2:
         return Icons.schedule;
       case TimerType.intensive:
         return Icons.fitness_center;
-      case TimerType.norest: // ИСПРАВЛЕНО: Используем правильные константы
+      case TimerType.norest:
         return Icons.flash_on;
       case TimerType.countdown:
         return Icons.hourglass_bottom;
@@ -197,13 +223,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
     switch (timerType) {
       case TimerType.classic:
         return 'Классический';
-      case TimerType.interval1: // ИСПРАВЛЕНО: Используем правильные константы
+      case TimerType.interval1:
         return 'Интервальный 1';
-      case TimerType.interval2: // ИСПРАВЛЕНО: Используем правильные константы
+      case TimerType.interval2:
         return 'Интервальный 2';
       case TimerType.intensive:
         return 'Интенсивный';
-      case TimerType.norest: // ИСПРАВЛЕНО: Используем правильные константы
+      case TimerType.norest:
         return 'Без отдыха';
       case TimerType.countdown:
         return 'Обратный отсчет';
@@ -407,7 +433,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
             screenWidth * UIConfig.containerBorderRadiusFactor,
           ),
           onTap: () {
-            // TODO: Переход к детальному просмотру тренировки
+            // ИСПРАВЛЕНО: Навигация к детальному просмотру
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => SessionDetailScreen(session: session),
+              ),
+            );
           },
           child: Padding(
             padding: EdgeInsets.all(screenWidth * UIConfig.containerInnerPaddingFactor),
@@ -438,6 +469,41 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // ДОБАВЛЕНО: Индикатор типа тренировки
+                          Row(
+                            children: [
+                              // Индикатор привязанной/свободной тренировки
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: screenWidth * 0.015,
+                                  vertical: screenWidth * 0.003,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: session.isLinkedWorkout
+                                      ? timerColor.withOpacity(0.1)
+                                      : customTheme.textSecondaryColor.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: session.isLinkedWorkout
+                                        ? timerColor.withOpacity(0.3)
+                                        : customTheme.textSecondaryColor.withOpacity(0.3),
+                                    width: 0.5,
+                                  ),
+                                ),
+                                child: Text(
+                                  session.isLinkedWorkout ? 'Привязанная' : 'Свободная',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: session.isLinkedWorkout
+                                        ? timerColor
+                                        : customTheme.textSecondaryColor,
+                                    fontSize: screenWidth * 0.022,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: screenHeight * 0.005),
                           Text(
                             session.displayName,
                             style: theme.textTheme.titleMedium?.copyWith(

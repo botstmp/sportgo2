@@ -1,5 +1,6 @@
 // lib/core/providers/timer_provider.dart
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../constants/ui_config.dart';
 import '../enums/timer_enums.dart';
@@ -7,6 +8,50 @@ import '../../l10n/generated/app_localizations.dart';
 // ДОБАВЛЕННЫЕ ИМПОРТЫ:
 import '../models/workout_session.dart';
 import '../services/workout_history_service.dart';
+
+/// Класс для хранения данных об отсечке времени
+class LapTime {
+  final int lapNumber;
+  final int time; // Время с начала тренировки в секундах
+  final String formattedTime;
+  final DateTime timestamp;
+  final int lapDuration; // ДОБАВЛЕНО: Продолжительность конкретного раунда
+
+  LapTime({
+    required this.lapNumber,
+    required this.time,
+    required this.formattedTime,
+    required this.timestamp,
+    required this.lapDuration,
+  });
+
+  // Форматированная продолжительность раунда
+  String get formattedLapDuration {
+    final minutes = lapDuration ~/ 60;
+    final seconds = lapDuration % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'lapNumber': lapNumber,
+      'time': time,
+      'formattedTime': formattedTime,
+      'timestamp': timestamp.toIso8601String(),
+      'lapDuration': lapDuration,
+    };
+  }
+
+  factory LapTime.fromMap(Map<String, dynamic> map) {
+    return LapTime(
+      lapNumber: map['lapNumber'],
+      time: map['time'],
+      formattedTime: map['formattedTime'],
+      timestamp: DateTime.parse(map['timestamp']),
+      lapDuration: map['lapDuration'] ?? 0,
+    );
+  }
+}
 
 /// Провайдер для управления таймерами SportOn
 class TimerProvider with ChangeNotifier {
@@ -43,7 +88,7 @@ class TimerProvider with ChangeNotifier {
   // Отсечки времени для классического таймера
   List<LapTime> _lapTimes = []; // Промежуточные результаты
 
-  // ДОБАВЛЕНО: Переменная для отслеживания состояния до паузы
+  // Переменная для отслеживания состояния до паузы
   TimerState? _stateBeforePause;
 
   // === ГЕТТЕРЫ ===
@@ -211,7 +256,7 @@ class TimerProvider with ChangeNotifier {
       _linkedWorkoutCode = workoutCode;
       _linkedWorkoutTitle = workoutTitle;
       _userNotes = userNotes;
-      print('🏷️ TimerProvider: Workout linked - Code: $workoutCode, Title: $workoutTitle');
+      print('🏷 TimerProvider: Workout linked - Code: $workoutCode, Title: $workoutTitle');
       notifyListeners();
     }
   }
@@ -221,7 +266,7 @@ class TimerProvider with ChangeNotifier {
     _linkedWorkoutCode = null;
     _linkedWorkoutTitle = null;
     _userNotes = null;
-    print('🏷️ TimerProvider: Workout link cleared');
+    print('🏷 TimerProvider: Workout link cleared');
     notifyListeners();
   }
 
@@ -453,22 +498,19 @@ class TimerProvider with ChangeNotifier {
   void pause() {
     if (isRunning) {
       _timer?.cancel();
-      // ДОБАВЛЕНО: Запоминаем состояние до паузы
       _stateBeforePause = _state;
       _state = TimerState.paused;
       notifyListeners();
     }
   }
 
-  /// ИСПРАВЛЕННЫЙ МЕТОД: Возобновить
+  /// Возобновить
   void _resume() {
     if (_state == TimerState.paused) {
-      // ИСПРАВЛЕНО: Восстанавливаем состояние, которое было до паузы
       if (_stateBeforePause != null) {
         _state = _stateBeforePause!;
-        _stateBeforePause = null; // Очищаем после использования
+        _stateBeforePause = null;
       } else {
-        // Fallback на старую логику (если что-то пошло не так)
         _state = _currentTime > 0 ? TimerState.working : TimerState.resting;
       }
 
@@ -485,7 +527,7 @@ class TimerProvider with ChangeNotifier {
     _totalTime = 0;
     _currentRound = 1;
     _endTime = null;
-    _stateBeforePause = null; // ДОБАВЛЕНО: Очищаем состояние до паузы
+    _stateBeforePause = null;
     notifyListeners();
   }
 
@@ -495,9 +537,9 @@ class TimerProvider with ChangeNotifier {
     _state = TimerState.finished;
     _endTime = DateTime.now();
     _currentTime = 0;
-    _stateBeforePause = null; // ДОБАВЛЕНО: Очищаем состояние до паузы
+    _stateBeforePause = null;
 
-    // ДОБАВЛЕНО: Автоматическое сохранение
+    // Автоматическое сохранение
     _saveWorkoutSession();
 
     notifyListeners();
@@ -525,7 +567,6 @@ class TimerProvider with ChangeNotifier {
           final recordResult = await _historyService.checkForRecord(session);
           if (recordResult.isRecord) {
             print('🏆 TimerProvider: NEW RECORD! ${recordResult.message}');
-            // Здесь можно добавить уведомление о рекорде
           } else if (recordResult.isFirstAttempt) {
             print('🎯 TimerProvider: First attempt for this workout!');
           }
@@ -547,7 +588,7 @@ class TimerProvider with ChangeNotifier {
     _totalRestTime = 0;
     _lapTimes.clear();
 
-    // ДОБАВЛЕНО: Очистка привязки
+    // Очистка привязки
     clearWorkoutLink();
 
     notifyListeners();
@@ -556,22 +597,63 @@ class TimerProvider with ChangeNotifier {
   /// Добавить отсечку времени (для классического таймера)
   void addLapTime() {
     if (_type == TimerType.classic && _state == TimerState.working) {
+      // ИСПРАВЛЕНО: Правильно вычисляем продолжительность раунда
+      final lapDuration = _lapTimes.isEmpty
+          ? _currentTime  // Первый раунд - от начала
+          : _currentTime - _lapTimes.last.time; // Последующие - разница
+
       final lapTime = LapTime(
         lapNumber: _lapTimes.length + 1,
         time: _currentTime,
         formattedTime: formattedTime,
         timestamp: DateTime.now(),
+        lapDuration: lapDuration,
       );
+
       _lapTimes.add(lapTime);
+      print('🏃 TimerProvider: Lap ${lapTime.lapNumber} added - Duration: ${lapTime.formattedLapDuration}, Total: ${lapTime.formattedTime}');
       notifyListeners();
     }
   }
 
-  // === МЕТОДЫ ДАННЫХ ===
+  /// Получить статистику раундов для классического таймера
+  Map<String, dynamic> getLapStats() {
+    if (_lapTimes.isEmpty) {
+      return {
+        'totalLaps': 0,
+        'averageLapTime': 0,
+        'fastestLap': 0,
+        'slowestLap': 0,
+        'consistency': 0.0,
+      };
+    }
+
+    final lapDurations = _lapTimes.map((lap) => lap.lapDuration).toList();
+    final total = lapDurations.reduce((a, b) => a + b);
+    final average = total / lapDurations.length;
+    final fastest = lapDurations.reduce((a, b) => a < b ? a : b);
+    final slowest = lapDurations.reduce((a, b) => a > b ? a : b);
+
+    // Вычисляем стабильность (коэффициент вариации)
+    final variance = lapDurations
+        .map((duration) => (duration - average) * (duration - average))
+        .reduce((a, b) => a + b) / lapDurations.length;
+    final standardDeviation = variance > 0 ? math.sqrt(variance) : 0;
+    final consistency = average > 0 ? (1 - (standardDeviation / average)) * 100 : 0;
+
+    return {
+      'totalLaps': _lapTimes.length,
+      'averageLapTime': average,
+      'fastestLap': fastest,
+      'slowestLap': slowest,
+      'consistency': consistency.clamp(0.0, 100.0),
+      'lapDetails': _lapTimes.map((lap) => lap.toMap()).toList(),
+    };
+  }
 
   /// Получить результаты тренировки
   Map<String, dynamic> getWorkoutResults() {
-    return {
+    final baseResults = {
       'type': _type.toString(),
       'workDuration': _workDuration,
       'restDuration': _restDuration,
@@ -583,13 +665,23 @@ class TimerProvider with ChangeNotifier {
       'endTime': _endTime?.toIso8601String(),
       'totalDuration': totalDuration?.inSeconds,
       'isCompleted': _state == TimerState.finished,
-      // ДОБАВЛЕНО: Информация о привязке
+      // Информация о привязке
       'linkedWorkoutCode': _linkedWorkoutCode,
       'linkedWorkoutTitle': _linkedWorkoutTitle,
       'userNotes': _userNotes,
       'hasWorkoutLink': hasWorkoutLink,
-      'lapTimes': _lapTimes.map((lap) => lap.time).toList(),
     };
+
+    // Детальная статистика для классического таймера
+    if (_type == TimerType.classic) {
+      final lapStats = getLapStats();
+      baseResults['lapStats'] = lapStats;
+      baseResults['lapTimes'] = _lapTimes.map((lap) => lap.toMap()).toList();
+    } else {
+      baseResults['lapTimes'] = _lapTimes.map((lap) => lap.time).toList();
+    }
+
+    return baseResults;
   }
 
   /// Получить настройки таймера

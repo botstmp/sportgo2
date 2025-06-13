@@ -100,8 +100,11 @@ class DatabaseHelper {
     final db = await database;
 
     try {
+      print('🔍 Сохраняем сессию: ${session.id}');
+
       // Конвертируем в JSON для сохранения
       final sessionMap = session.toJson();
+      print('🔍 JSON данные: $sessionMap');
 
       // Преобразуем сложные объекты в JSON строки
       sessionMap['configuration'] = jsonEncode(sessionMap['configuration']);
@@ -115,10 +118,11 @@ class DatabaseHelper {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
 
-      print('✅ Workout session saved: ${session.id}');
+      print('✅ Workout session saved with result: $result, ID: ${session.id}');
       return result;
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('❌ Error saving workout session: $e');
+      print('❌ StackTrace: $stackTrace');
       rethrow;
     }
   }
@@ -128,14 +132,26 @@ class DatabaseHelper {
     final db = await database;
 
     try {
+      print('🔍 Загружаем все сессии из БД...');
+
       final List<Map<String, dynamic>> maps = await db.query(
         'workout_sessions',
         orderBy: 'created_at DESC',
       );
 
-      return maps.map((map) => _mapToWorkoutSession(map)).toList();
-    } catch (e) {
+      print('🔍 Найдено записей в БД: ${maps.length}');
+
+      if (maps.isNotEmpty) {
+        print('🔍 Первая запись: ${maps.first}');
+      }
+
+      final sessions = maps.map((map) => _mapToWorkoutSession(map)).toList();
+      print('🔍 Преобразовано в объекты: ${sessions.length}');
+
+      return sessions;
+    } catch (e, stackTrace) {
       print('❌ Error loading workout sessions: $e');
+      print('❌ StackTrace: $stackTrace');
       return [];
     }
   }
@@ -251,7 +267,9 @@ class DatabaseHelper {
 
     try {
       final result = await db.rawQuery('SELECT COUNT(*) as count FROM workout_sessions');
-      return Sqflite.firstIntValue(result) ?? 0;
+      final count = Sqflite.firstIntValue(result) ?? 0;
+      print('🔍 Количество записей в БД: $count');
+      return count;
     } catch (e) {
       print('❌ Error getting sessions count: $e');
       return 0;
@@ -325,19 +343,44 @@ class DatabaseHelper {
 
   /// Преобразовать Map из БД в WorkoutSession
   WorkoutSession _mapToWorkoutSession(Map<String, dynamic> map) {
-    // Восстанавливаем JSON объекты
-    final configurationJson = map['configuration'] as String;
-    final configuration = jsonDecode(configurationJson) as Map<String, dynamic>;
+    try {
+      print('🔍 Преобразуем запись: ${map['id']}');
 
-    // Обрабатываем classic_stats если есть
-    final classicStatsJson = map['classic_stats'] as String?;
-    if (classicStatsJson != null) {
-      map['classic_stats'] = jsonDecode(classicStatsJson);
+      // Создаем копию map для безопасного изменения
+      final workingMap = Map<String, dynamic>.from(map);
+
+      // Восстанавливаем JSON объекты
+      final configurationJson = workingMap['configuration'] as String;
+      try {
+        workingMap['configuration'] = jsonDecode(configurationJson) as Map<String, dynamic>;
+      } catch (e) {
+        print('⚠️ Error decoding configuration: $e');
+        workingMap['configuration'] = <String, dynamic>{};
+      }
+
+      // Обрабатываем classic_stats если есть
+      final classicStatsJson = workingMap['classic_stats'] as String?;
+      if (classicStatsJson != null && classicStatsJson.isNotEmpty && classicStatsJson != 'null') {
+        try {
+          workingMap['classic_stats'] = jsonDecode(classicStatsJson);
+        } catch (e) {
+          print('⚠️ Error decoding classic_stats: $e');
+          workingMap['classic_stats'] = null;
+        }
+      } else {
+        workingMap['classic_stats'] = null;
+      }
+
+      print('🔍 Создаем WorkoutSession: ${workingMap['id']}');
+      final session = WorkoutSession.fromJson(workingMap);
+      print('✅ WorkoutSession создан: ${session.displayName}');
+      return session;
+    } catch (e, stackTrace) {
+      print('❌ Error mapping to WorkoutSession: $e');
+      print('❌ Map data: $map');
+      print('❌ StackTrace: $stackTrace');
+      rethrow;
     }
-
-    map['configuration'] = configuration;
-
-    return WorkoutSession.fromJson(map);
   }
 
   /// Очистить все данные (для тестирования)
