@@ -113,7 +113,8 @@ class ConfirmationDialog extends StatelessWidget {
                   child: SecondaryButton(
                     text: cancelText,
                     onPressed: () {
-                      Navigator.of(context).pop();
+                      print('🚫 ConfirmationDialog: Cancel button pressed');
+                      Navigator.of(context).pop(false); // ИСПРАВЛЕНО: возвращаем false
                       onCancel?.call();
                     },
                   ),
@@ -126,7 +127,8 @@ class ConfirmationDialog extends StatelessWidget {
                   child: PrimaryButton(
                     text: confirmText,
                     onPressed: () {
-                      Navigator.of(context).pop();
+                      print('✅ ConfirmationDialog: Confirm button pressed');
+                      Navigator.of(context).pop(true); // ИСПРАВЛЕНО: возвращаем true
                       onConfirm?.call();
                     },
                   ),
@@ -150,6 +152,11 @@ class ConfirmationDialog extends StatelessWidget {
         Color? iconColor,
         bool isDangerous = false,
       }) {
+    print('🔍 ConfirmationDialog.show() called with:');
+    print('🔍 - title: $title');
+    print('🔍 - message: $message');
+    print('🔍 - isDangerous: $isDangerous');
+
     return showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -161,8 +168,7 @@ class ConfirmationDialog extends StatelessWidget {
         icon: icon,
         iconColor: iconColor,
         isDangerous: isDangerous,
-        onConfirm: () => Navigator.of(context).pop(true),
-        onCancel: () => Navigator.of(context).pop(false),
+        // ИСПРАВЛЕНО: убираем дублирующие колбэки
       ),
     );
   }

@@ -40,9 +40,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      WorkoutDebugHelper.fullDiagnostics();
-    });
+    // ПОЛНОСТЬЮ ОТКЛЮЧЕНО: Все отладочные функции
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   WorkoutDebugHelper.fullDiagnostics();
+    // });
     _loadHistory();
     _searchController.addListener(_onSearchChanged);
   }
@@ -152,36 +153,77 @@ class _HistoryScreenState extends State<HistoryScreen> {
     _applyFilters();
   }
 
-  /// Удалить тренировку
+  /// ИСПРАВЛЕННАЯ версия удаления с правильным диалогом
   Future<void> _deleteSession(WorkoutSession session) async {
-    final shouldDelete = await ConfirmationDialog.show(
-      context,
-      title: 'Удалить тренировку?',
-      message: 'Тренировка "${session.displayName}" будет удалена навсегда',
-      confirmText: 'Удалить',
-      cancelText: 'Отмена',
-      icon: Icons.delete_forever,
-      isDangerous: true,
-    );
+    if (session.id == null || session.id!.isEmpty) {
+      print('❌ Попытка удалить сессию с пустым ID');
+      return;
+    }
 
-    if (shouldDelete == true && session.id != null) {
-      try {
-        final success = await _historyService.deleteWorkoutSession(session.id!);
-        if (success) {
-          await _loadHistory(); // Перезагружаем список
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Тренировка удалена')),
-            );
-          }
-        }
-      } catch (e) {
-        print('Ошибка удаления тренировки: $e');
+    print('🗑 Attempting to delete session: ${session.id} - ${session.displayName}');
+
+    try {
+      final shouldDelete = await ConfirmationDialog.show(
+        context,
+        title: 'Удалить тренировку?',
+        message: 'Тренировка "${session.displayName}" будет удалена навсегда',
+        confirmText: 'Удалить',
+        cancelText: 'Отмена',
+        icon: Icons.delete_forever,
+        isDangerous: true,
+      );
+
+      print('🔍 Dialog result: $shouldDelete (type: ${shouldDelete.runtimeType})');
+
+      if (shouldDelete != true) {
+        print('🚫 User cancelled deletion (result was: $shouldDelete)');
+        return;
+      }
+
+      print('✅ User confirmed deletion, proceeding...');
+
+      final success = await _historyService.deleteWorkoutSession(session.id!);
+
+      if (!mounted) return;
+
+      if (success) {
+        print('✅ Session deleted successfully from database');
+        setState(() {
+          _allSessions.removeWhere((s) => s.id == session.id);
+          _applyFilters();
+        });
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Ошибка удаления тренировки')),
+            const SnackBar(
+              content: Text('Тренировка удалена'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
           );
         }
+      } else {
+        print('❌ Failed to delete session from database');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Ошибка удаления'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('❌ Exception during deletion: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Произошла ошибка'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
       }
     }
   }
@@ -507,6 +549,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               ),
                             ],
                           ),
+
                           SizedBox(height: screenHeight * 0.005),
                           Text(
                             session.displayName,
@@ -687,6 +730,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             ),
             textAlign: TextAlign.center,
           ),
+
           if (_selectedTimerType != null || _searchQuery.isNotEmpty) ...[
             SizedBox(height: screenHeight * 0.03),
             SecondaryButton(

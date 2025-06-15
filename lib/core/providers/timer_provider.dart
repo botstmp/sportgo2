@@ -561,7 +561,6 @@ class TimerProvider with ChangeNotifier {
 
       if (success) {
         print('✅ TimerProvider: Workout session auto-saved - ${session.displayName}');
-
         // Проверяем на рекорд (только для привязанных тренировок)
         if (session.isLinkedWorkout) {
           final recordResult = await _historyService.checkForRecord(session);

@@ -106,19 +106,12 @@ class WorkoutHistoryService {
     }
   }
 
-  /// Удалить тренировку
+  /// ЧИСТОЕ удаление без логов
   Future<bool> deleteWorkoutSession(String id) async {
     try {
       final result = await _databaseHelper.deleteWorkoutSession(id);
-      if (result > 0) {
-        print('✅ WorkoutHistoryService: Session deleted - $id');
-        return true;
-      } else {
-        print('⚠️ WorkoutHistoryService: No session deleted - $id');
-        return false;
-      }
+      return result > 0;
     } catch (e) {
-      print('❌ WorkoutHistoryService: Failed to delete session - $e');
       return false;
     }
   }
@@ -595,4 +588,14 @@ class RecordCheckResult {
     }
     return '';
   }
+}
+
+/// Типы рекордов
+enum RecordType {
+  fastestTime('Лучшее время'),
+  mostRounds('Больше всего раундов'),
+  bestConsistency('Лучшая стабильность');
+
+  const RecordType(this.displayName);
+  final String displayName;
 }

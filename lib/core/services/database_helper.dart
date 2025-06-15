@@ -253,21 +253,62 @@ class DatabaseHelper {
     }
   }
 
-  /// Удалить сессию тренировки
+  /// ИСПРАВЛЕНО: Удалить сессию тренировки с транзакцией и проверками
   Future<int> deleteWorkoutSession(String id) async {
     final db = await database;
 
     try {
-      final result = await db.delete(
-        'workout_sessions',
-        where: 'id = ?',
-        whereArgs: [id],
-      );
+      print('🗑️ Attempting to delete session: $id');
 
-      print('✅ Workout session deleted: $id');
+      // Используем транзакцию для безопасного удаления
+      final result = await db.transaction((txn) async {
+        // Сначала проверяем, существует ли запись
+        final existingRecords = await txn.query(
+          'workout_sessions',
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+
+        if (existingRecords.isEmpty) {
+          print('⚠️ Session not found for deletion: $id');
+          return 0;
+        }
+
+        print('🔍 Found session to delete: ${existingRecords.first['id']}');
+
+        // Выполняем удаление
+        final deleteResult = await txn.delete(
+          'workout_sessions',
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+
+        print('🗑️ Delete operation result: $deleteResult');
+
+        // Дополнительная проверка - убеждаемся что запись удалена
+        final verificationRecords = await txn.query(
+          'workout_sessions',
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+
+        if (verificationRecords.isNotEmpty) {
+          print('❌ Session still exists after deletion attempt!');
+          throw Exception('Failed to delete session: record still exists');
+        }
+
+        print('✅ Session successfully deleted and verified: $id');
+        return deleteResult;
+      });
+
+      // Финальная проверка количества записей
+      final finalCount = await getWorkoutSessionsCount();
+      print('📊 Total sessions in DB after deletion: $finalCount');
+
       return result;
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('❌ Error deleting workout session: $e');
+      print('❌ StackTrace: $stackTrace');
       rethrow;
     }
   }
