@@ -62,7 +62,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen>
     reportText += '📅 $date в $time\n\n';
 
     // Информация о тренировке
-    reportText += '⚡ Тип: ${_getTimerTypeName(session.timerType)}\n';
+    reportText += '⚡️ Тип: ${_getTimerTypeName(session.timerType)}\n';
     reportText += '📝 Название: ${session.displayName}\n';
     reportText += '⏱️ Продолжительность: ${session.formattedDuration}\n';
     reportText += '🎯 Статус: ${session.status.displayName}\n';
@@ -72,7 +72,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen>
       reportText += '🔄 Раунды: ${stats.totalLaps}\n';
       if (stats.totalLaps > 0) {
         reportText += '📊 Среднее время раунда: ${stats.formattedAverageRound}\n';
-        reportText += '⚡ Лучший раунд: ${stats.formattedFastestRound}\n';
+        reportText += '⚡️ Лучший раунд: ${stats.formattedFastestRound}\n';
         reportText += '🎯 Стабильность: ${stats.consistencyPercent.toStringAsFixed(1)}%\n';
       }
     } else {
@@ -169,7 +169,6 @@ class _SessionDetailScreenState extends State<SessionDetailScreen>
     final time = '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
     return '$date в $time';
   }
-
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -481,12 +480,19 @@ class _SessionDetailScreenState extends State<SessionDetailScreen>
       ],
     );
   }
-
   /// Построить карточку основной статистики
   Widget _buildMainStatsCard(WorkoutSession session) {
     final theme = Theme.of(context);
     final customTheme = theme.extension<CustomThemeExtension>()!;
     final screenWidth = MediaQuery.of(context).size.width;
+
+    // ИСПРАВЛЕНИЕ 1: Правильное отображение количества раундов
+    String roundsValue;
+    if (session.timerType == TimerType.classic && session.classicStats != null) {
+      roundsValue = session.classicStats!.totalLaps.toString();
+    } else {
+      roundsValue = session.roundsCompleted.toString();
+    }
 
     return Container(
       width: double.infinity,
@@ -537,7 +543,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen>
                 child: _buildStatItem(
                   icon: Icons.repeat,
                   label: 'Раунды',
-                  value: session.roundsCompleted.toString(),
+                  value: roundsValue,
                   color: customTheme.buttonPrimaryColor,
                 ),
               ),
@@ -998,21 +1004,20 @@ class _SessionDetailScreenState extends State<SessionDetailScreen>
       ),
     );
   }
-
-  /// Построить карточку детальной информации о раундах
+  /// ИСПРАВЛЕНИЕ 2: Построить карточку детальной информации о раундах
   Widget _buildLapDetailsCard(WorkoutSession session) {
     final theme = Theme.of(context);
     final customTheme = theme.extension<CustomThemeExtension>()!;
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
-    // Получаем статистику раундов из конфигурации сессии
-    final lapStats = session.configuration['lapStats'] as Map<String, dynamic>?;
-    final lapDetails = session.configuration['lapTimes'] as List<dynamic>?;
-
-    if (lapStats == null || lapDetails == null || lapDetails.isEmpty) {
+    // Проверяем наличие classicStats и lapTimes
+    if (session.classicStats == null || session.classicStats!.lapTimes.isEmpty) {
       return const SizedBox.shrink();
     }
+
+    final classicStats = session.classicStats!;
+    final lapTimes = classicStats.lapTimes;
 
     return Container(
       width: double.infinity,
@@ -1104,30 +1109,67 @@ class _SessionDetailScreenState extends State<SessionDetailScreen>
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: lapDetails.length,
+            itemCount: lapTimes.length,
             itemBuilder: (context, index) {
-              final lap = lapDetails[index] as Map<String, dynamic>;
-              final lapNumber = lap['lapNumber'] as int? ?? 0;
-              final lapDuration = lap['lapDuration'] as int? ?? 0;
-              final totalTime = lap['time'] as int? ?? 0;
+              final lapTime = lapTimes[index];
+              final lapNumber = index + 1;
 
-              // Определяем темп относительно среднего
-              final averageLapTime = lapStats['averageLapTime'] as double? ?? 0.0;
-              final fastestLap = lapStats['fastestLap'] as int? ?? 0;
-              final isFastest = lapDuration == fastestLap;
+              // Вычисляем время этого раунда
+              Duration lapDuration;
+              if (index == 0) {
+                lapDuration = lapTime;
+              } else {
+                lapDuration = lapTime - lapTimes[index - 1];
+              }
+
+              final lapDurationSeconds = lapDuration.inSeconds;
+              final totalTimeSeconds = lapTime.inSeconds;
+
+              // Вычисляем статистику раундов из lapTimes
+              final lapDurations = <Duration>[];
+              for (int i = 0; i < lapTimes.length; i++) {
+                if (i == 0) {
+                  lapDurations.add(lapTimes[i]);
+                } else {
+                  lapDurations.add(lapTimes[i] - lapTimes[i - 1]);
+                }
+              }
+
+              // Находим быстрый и медленный раунды
+              final fastestDuration = lapDurations.reduce((a, b) => a.inSeconds < b.inSeconds ? a : b);
+              final slowestDuration = lapDurations.reduce((a, b) => a.inSeconds > b.inSeconds ? a : b);
+              final totalSeconds = lapDurations.fold<int>(0, (sum, duration) => sum + duration.inSeconds);
+              final averageSeconds = totalSeconds / lapDurations.length;
+
+              final isFastest = lapDurationSeconds == fastestDuration.inSeconds;
+              final isSlowest = lapDurationSeconds == slowestDuration.inSeconds && lapTimes.length > 1;
 
               Color lapColor = customTheme.textPrimaryColor;
               IconData lapIcon = Icons.timer;
+              String paceLabel = '';
 
               if (isFastest) {
                 lapColor = customTheme.successColor;
                 lapIcon = Icons.speed;
-              } else if (lapDuration > averageLapTime * 1.1) {
+                paceLabel = 'BEST';
+              } else if (isSlowest) {
                 lapColor = customTheme.errorColor;
                 lapIcon = Icons.trending_down;
-              } else if (lapDuration < averageLapTime * 0.9) {
-                lapColor = customTheme.warningColor;
-                lapIcon = Icons.trending_up;
+                paceLabel = 'SLOW';
+              } else if (averageSeconds > 0) {
+                if (lapDurationSeconds < averageSeconds * 0.95) {
+                  lapColor = customTheme.successColor.withOpacity(0.8);
+                  lapIcon = Icons.trending_up;
+                  paceLabel = 'FAST';
+                } else if (lapDurationSeconds > averageSeconds * 1.05) {
+                  lapColor = customTheme.warningColor;
+                  lapIcon = Icons.trending_down;
+                  paceLabel = 'SLOW';
+                } else {
+                  lapColor = customTheme.buttonPrimaryColor;
+                  lapIcon = Icons.remove;
+                  paceLabel = 'AVG';
+                }
               }
 
               return Container(
@@ -1139,11 +1181,17 @@ class _SessionDetailScreenState extends State<SessionDetailScreen>
                 decoration: BoxDecoration(
                   color: isFastest
                       ? customTheme.successColor.withOpacity(0.1)
+                      : isSlowest
+                      ? customTheme.errorColor.withOpacity(0.1)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(6),
-                  border: isFastest
-                      ? Border.all(color: customTheme.successColor.withOpacity(0.3))
-                      : null,
+                  border: (isFastest || isSlowest)
+                      ? Border.all(
+                      color: isFastest
+                          ? customTheme.successColor.withOpacity(0.3)
+                          : customTheme.errorColor.withOpacity(0.3))
+                      : Border.all(
+                      color: customTheme.dividerColor.withOpacity(0.3)),
                 ),
                 child: Row(
                   children: [
@@ -1164,11 +1212,13 @@ class _SessionDetailScreenState extends State<SessionDetailScreen>
                     SizedBox(
                       width: screenWidth * 0.25,
                       child: Text(
-                        _formatLapDuration(lapDuration),
+                        _formatLapDuration(lapDurationSeconds),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: lapColor,
                           fontFamily: AppThemes.timerFontFamily,
-                          fontWeight: isFastest ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: isFastest || isSlowest
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                         ),
                       ),
                     ),
@@ -1176,7 +1226,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen>
                     // Общее время
                     Expanded(
                       child: Text(
-                        _formatLapDuration(totalTime),
+                        _formatLapDuration(totalTimeSeconds),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: customTheme.textSecondaryColor,
                           fontFamily: AppThemes.timerFontFamily,
@@ -1187,10 +1237,23 @@ class _SessionDetailScreenState extends State<SessionDetailScreen>
                     // Индикатор темпа
                     SizedBox(
                       width: screenWidth * 0.15,
-                      child: Icon(
-                        lapIcon,
-                        color: lapColor,
-                        size: screenWidth * 0.04,
+                      child: Column(
+                        children: [
+                          Icon(
+                            lapIcon,
+                            color: lapColor,
+                            size: screenWidth * 0.04,
+                          ),
+                          if (paceLabel.isNotEmpty)
+                            Text(
+                              paceLabel,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: lapColor,
+                                fontSize: screenWidth * 0.02,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ],
@@ -1207,6 +1270,10 @@ class _SessionDetailScreenState extends State<SessionDetailScreen>
             decoration: BoxDecoration(
               color: customTheme.scaffoldBackgroundColor,
               borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: customTheme.dividerColor.withOpacity(0.5),
+                width: 1,
+              ),
             ),
             child: Column(
               children: [
@@ -1220,7 +1287,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen>
                       ),
                     ),
                     Text(
-                      _formatLapDuration(lapStats['fastestLap'] as int? ?? 0),
+                      classicStats.formattedFastestRound,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: customTheme.successColor,
                         fontWeight: FontWeight.bold,
@@ -1240,7 +1307,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen>
                       ),
                     ),
                     Text(
-                      _formatLapDuration((lapStats['averageLapTime'] as double? ?? 0.0).round()),
+                      classicStats.formattedAverageRound,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: customTheme.textPrimaryColor,
                         fontWeight: FontWeight.bold,
@@ -1260,7 +1327,17 @@ class _SessionDetailScreenState extends State<SessionDetailScreen>
                       ),
                     ),
                     Text(
-                      _formatLapDuration(lapStats['slowestLap'] as int? ?? 0),
+                      _formatLapDuration((() {
+                        final lapDurations = <Duration>[];
+                        for (int i = 0; i < classicStats.lapTimes.length; i++) {
+                          if (i == 0) {
+                            lapDurations.add(classicStats.lapTimes[i]);
+                          } else {
+                            lapDurations.add(classicStats.lapTimes[i] - classicStats.lapTimes[i - 1]);
+                          }
+                        }
+                        return lapDurations.reduce((a, b) => a.inSeconds > b.inSeconds ? a : b).inSeconds;
+                      })()),
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: customTheme.errorColor,
                         fontWeight: FontWeight.bold,
@@ -1268,6 +1345,48 @@ class _SessionDetailScreenState extends State<SessionDetailScreen>
                       ),
                     ),
                   ],
+                ),
+                SizedBox(height: screenHeight * 0.015),
+                // Диапазон времени раундов
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: screenWidth * 0.02,
+                    vertical: screenWidth * 0.01,
+                  ),
+                  decoration: BoxDecoration(
+                    color: customTheme.buttonPrimaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Диапазон:',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: customTheme.textSecondaryColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        '${classicStats.formattedFastestRound} - ${_formatLapDuration((() {
+                          final lapDurations = <Duration>[];
+                          for (int i = 0; i < classicStats.lapTimes.length; i++) {
+                            if (i == 0) {
+                              lapDurations.add(classicStats.lapTimes[i]);
+                            } else {
+                              lapDurations.add(classicStats.lapTimes[i] - classicStats.lapTimes[i - 1]);
+                            }
+                          }
+                          return lapDurations.reduce((a, b) => a.inSeconds > b.inSeconds ? a : b).inSeconds;
+                        })())}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: customTheme.buttonPrimaryColor,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: AppThemes.timerFontFamily,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
