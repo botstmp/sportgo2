@@ -23,11 +23,32 @@ class WorkoutHistoryService {
   /// Сохранить новую тренировку
   Future<bool> saveWorkoutSession(WorkoutSession session) async {
     try {
-      await _databaseHelper.insertWorkoutSession(session);
-      print('✅ WorkoutHistoryService: Session saved - ${session.displayName}');
-      return true;
-    } catch (e) {
+      print('📝 WorkoutHistoryService: Attempting to save session - ${session.displayName}');
+      print('📝 Session ID: ${session.id}');
+      print('📝 Timer type: ${session.timerType}');
+      print('📝 Duration: ${session.formattedDuration}');
+
+      final result = await _databaseHelper.insertWorkoutSession(session);
+
+      if (result > 0) {
+        print('✅ WorkoutHistoryService: Session saved successfully - ${session.displayName}');
+
+        // Дополнительная проверка - загружаем сессию обратно
+        final savedSession = await _databaseHelper.getWorkoutSessionById(session.id!);
+        if (savedSession != null) {
+          print('✅ WorkoutHistoryService: Session verification successful');
+        } else {
+          print('⚠️ WorkoutHistoryService: Session saved but verification failed');
+        }
+
+        return true;
+      } else {
+        print('⚠️ WorkoutHistoryService: Insert returned 0 rows');
+        return false;
+      }
+    } catch (e, stackTrace) {
       print('❌ WorkoutHistoryService: Failed to save session - $e');
+      print('❌ StackTrace: $stackTrace');
       return false;
     }
   }
@@ -35,11 +56,19 @@ class WorkoutHistoryService {
   /// Получить все тренировки
   Future<List<WorkoutSession>> getAllSessions() async {
     try {
+      print('🔍 WorkoutHistoryService: Loading all sessions...');
       final sessions = await _databaseHelper.getAllWorkoutSessions();
       print('✅ WorkoutHistoryService: Loaded ${sessions.length} sessions');
+
+      if (sessions.isNotEmpty) {
+        print('🔍 First session: ${sessions.first.displayName}');
+        print('🔍 Last session: ${sessions.last.displayName}');
+      }
+
       return sessions;
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('❌ WorkoutHistoryService: Failed to load sessions - $e');
+      print('❌ StackTrace: $stackTrace');
       return [];
     }
   }
@@ -274,7 +303,7 @@ class WorkoutHistoryService {
       if (newSession.timerType == TimerType.classic && newSession.classicStats != null) {
         final newStats = newSession.classicStats!;
 
-        // Рекорд по количеству раундов (ИСПРАВЛЕНО: mostRounds вместо mostLaps)
+        // Рекорд по количеству раундов
         final maxPreviousRounds = otherSessions
             .where((session) => session.classicStats != null)
             .map((session) => session.classicStats!.totalLaps)
@@ -343,6 +372,39 @@ class WorkoutHistoryService {
     } catch (e) {
       print('❌ WorkoutHistoryService: Failed to get service info - $e');
       return {'serviceReady': false, 'error': e.toString()};
+    }
+  }
+
+  /// НОВЫЙ МЕТОД: Проверить целостность базы данных
+  Future<Map<String, dynamic>> checkDatabaseIntegrity() async {
+    try {
+      final info = await getServiceInfo();
+      final sessions = await getAllSessions();
+
+      final issues = <String>[];
+
+      for (final session in sessions) {
+        if (session.id == null || session.id!.isEmpty) {
+          issues.add('Session with empty ID found');
+        }
+        if (session.totalDuration.inSeconds <= 0) {
+          issues.add('Session with zero duration: ${session.id}');
+        }
+      }
+
+      return {
+        'isHealthy': issues.isEmpty,
+        'issues': issues,
+        'totalSessions': sessions.length,
+        'databaseInfo': info,
+      };
+    } catch (e) {
+      return {
+        'isHealthy': false,
+        'issues': ['Database check failed: $e'],
+        'totalSessions': 0,
+        'databaseInfo': {},
+      };
     }
   }
 }

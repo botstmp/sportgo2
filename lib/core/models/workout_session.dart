@@ -2,6 +2,8 @@
 import 'package:uuid/uuid.dart';
 import '../enums/timer_enums.dart';
 import 'workout_enums.dart';
+import 'dart:convert'; // Добавляем для работы с JSON
+import 'dart:math' as math; // Добавляем для sqrt
 
 /// Модель сессии тренировки SportOn
 class WorkoutSession {
@@ -102,6 +104,13 @@ class WorkoutSession {
     return workTime.inSeconds / totalTime.inSeconds;
   }
 
+  /// Тип связи с тренировкой
+  String get linkType {
+    if (workoutCode != null) return 'code';
+    if (workoutTitle != null) return 'title';
+    return 'free';
+  }
+
   /// Создать сессию из провайдера таймера
   factory WorkoutSession.fromTimerProvider(
       dynamic timerProvider, {
@@ -121,19 +130,15 @@ class WorkoutSession {
     final results = timerProvider.getWorkoutResults();
     final timerType = timerProvider.type as TimerType;
 
-    // ИСПРАВЛЕНО: Определяем статус используя правильные константы
-    WorkoutStatus status;
+    // Определяем статус
+    WorkoutStatus status = WorkoutStatus.completed;
     if (results['isCompleted'] == true) {
       status = WorkoutStatus.completed;
     } else if (results['totalWorkTime'] > 0) {
-      // ИСПРАВЛЕНО: Используем существующую константу - если есть время работы, значит была активность
-      status = WorkoutStatus.completed; // Считаем что тренировка была выполнена, даже если не до конца
-    } else {
-      // ИСПРАВЛЕНО: Если вообще нет времени работы - тренировка не началась
-      status = WorkoutStatus.completed; // По умолчанию completed
+      status = WorkoutStatus.completed;
     }
 
-    // Создаем конфигурацию
+// Создаем конфигурацию
     final configuration = <String, dynamic>{
       'workDuration': results['workDuration'],
       'restDuration': results['restDuration'],
@@ -238,62 +243,195 @@ class WorkoutSession {
     );
   }
 
-  /// Конвертировать в Map для БД
+  /// ИСПРАВЛЕНО: Конвертировать в Map для БД согласно схеме
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'timer_type': timerType.name,
+      'start_time': startTime.millisecondsSinceEpoch,
+      'end_time': endTime.millisecondsSinceEpoch,
+      'total_duration': totalDuration.inMilliseconds,
+      'status': status.name,
       'workout_code': workoutCode,
       'workout_title': workoutTitle,
+      'link_type': linkType,
       'user_notes': userNotes,
-      'timer_type': timerType.name,
-      'status': status.name,
-      'start_time': startTime.toIso8601String(),
-      'end_time': endTime.toIso8601String(),
-      'work_time_ms': workTime.inMilliseconds,
-      'rest_time_ms': restTime.inMilliseconds,
+      'configuration': json.encode(configuration), // Сериализуем в JSON строку
+      'work_time': workTime.inMilliseconds,
+      'rest_time': restTime.inMilliseconds,
+      'pause_time': 0, // Пока не используется, но требуется схемой
       'rounds_completed': roundsCompleted,
-      'configuration': configuration,
-      'classic_stats': classicStats?.toMap(),
+      'classic_stats': classicStats?.toMap() != null ? json.encode(classicStats!.toMap()) : null, // Безопасная сериализация
+      'created_at': createdAt.millisecondsSinceEpoch,
       'version': version,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
     };
   }
 
-  /// ДОБАВЛЕНО: Метод toJson для совместимости с database_helper
+  /// Метод toJson для совместимости с database_helper
   Map<String, dynamic> toJson() => toMap();
 
-  /// Создать из Map БД
+  /// 🛠️ ИСПРАВЛЕНО: Создать из Map БД с поддержкой старых форматов
   factory WorkoutSession.fromMap(Map<String, dynamic> map) {
-    return WorkoutSession(
-      id: map['id'],
-      workoutCode: map['workout_code'],
-      workoutTitle: map['workout_title'],
-      userNotes: map['user_notes'],
-      timerType: TimerType.values.firstWhere(
+    print('🔍 Создаем WorkoutSession: ${map['id']}');
+
+    try {
+      // Безопасное извлечение базовых данных
+      final id = map['id'] as String?;
+      final workoutCode = map['workout_code'] as String?;
+      final workoutTitle = map['workout_title'] as String?;
+      final userNotes = map['user_notes'] as String?;
+
+      // Парсинг типа таймера
+      final timerType = TimerType.values.firstWhere(
             (type) => type.name == map['timer_type'],
         orElse: () => TimerType.classic,
-      ),
-      status: WorkoutStatus.values.firstWhere(
+      );
+
+      // Парсинг статуса
+      final status = WorkoutStatus.values.firstWhere(
             (status) => status.name == map['status'],
         orElse: () => WorkoutStatus.completed,
-      ),
-      startTime: DateTime.parse(map['start_time']),
-      endTime: DateTime.parse(map['end_time']),
-      workTime: Duration(milliseconds: map['work_time_ms'] ?? 0),
-      restTime: Duration(milliseconds: map['rest_time_ms'] ?? 0),
-      roundsCompleted: map['rounds_completed'] ?? 0,
-      configuration: Map<String, dynamic>.from(map['configuration'] ?? {}),
-      classicStats: map['classic_stats'] != null
-          ? ClassicTimerStats.fromMap(Map<String, dynamic>.from(map['classic_stats']))
-          : null,
-      version: map['version'] ?? 1,
-      createdAt: DateTime.parse(map['created_at']),
-      updatedAt: DateTime.parse(map['updated_at']),
-    );
+      );
+
+      // Времена
+      final startTime = DateTime.fromMillisecondsSinceEpoch(map['start_time'] as int);
+      final endTime = DateTime.fromMillisecondsSinceEpoch(map['end_time'] as int);
+      final workTime = Duration(milliseconds: map['work_time'] ?? 0);
+      final restTime = Duration(milliseconds: map['rest_time'] ?? 0);
+      final roundsCompleted = map['rounds_completed'] ?? 0;
+
+      // 🛠️ БЕЗОПАСНЫЙ ПАРСИНГ КОНФИГУРАЦИИ
+      Map<String, dynamic> configuration = {};
+      final configData = map['configuration'];
+      if (configData != null) {
+        if (configData is String) {
+          try {
+            configuration = json.decode(configData) as Map<String, dynamic>;
+          } catch (e) {
+            print('⚠️ Ошибка декодирования configuration: $e');
+            configuration = {};
+          }
+        } else if (configData is Map) {
+          configuration = Map<String, dynamic>.from(configData);
+        }
+      }
+
+      // 🛠️ БЕЗОПАСНЫЙ ПАРСИНГ CLASSIC_STATS С ПОДДЕРЖКОЙ СТАРОГО ФОРМАТА
+      ClassicTimerStats? classicStats;
+      final statsData = map['classic_stats'];
+
+      if (statsData != null) {
+        if (statsData is String) {
+          // JSON строка - декодируем
+          try {
+            final decoded = json.decode(statsData);
+            if (decoded is Map) {
+              classicStats = ClassicTimerStats.fromMap(Map<String, dynamic>.from(decoded));
+            } else if (decoded is List) {
+              // 🔧 СТАРЫЙ ФОРМАТ - конвертируем List в ClassicTimerStats
+              print('🔄 Конвертируем старый формат List в ClassicTimerStats: $decoded');
+              classicStats = _convertLegacyListToClassicStats(decoded);
+            }
+          } catch (e) {
+            print('⚠️ Ошибка декодирования classic_stats JSON: $e');
+            classicStats = null;
+          }
+        } else if (statsData is Map) {
+          // Уже корректный Map
+          try {
+            classicStats = ClassicTimerStats.fromMap(Map<String, dynamic>.from(statsData));
+          } catch (e) {
+            print('⚠️ Ошибка создания ClassicTimerStats из Map: $e');
+            classicStats = null;
+          }
+        } else if (statsData is List) {
+          // 🔧 ПРЯМОЙ СТАРЫЙ ФОРМАТ - конвертируем
+          print('🔄 Конвертируем прямой старый формат List: $statsData');
+          classicStats = _convertLegacyListToClassicStats(statsData);
+        }
+      }
+
+      // Метки времени
+      final version = (map['version'] as int?) ?? 1;
+      final createdAt = DateTime.fromMillisecondsSinceEpoch(map['created_at'] as int);
+      final updatedAt = DateTime.now(); // При загрузке из БД обновляем время
+
+      final session = WorkoutSession(
+        id: id,
+        workoutCode: workoutCode,
+        workoutTitle: workoutTitle,
+        userNotes: userNotes,
+        timerType: timerType,
+        status: status,
+        startTime: startTime,
+        endTime: endTime,
+        workTime: workTime,
+        restTime: restTime,
+        roundsCompleted: roundsCompleted,
+        configuration: configuration,
+        classicStats: classicStats,
+        version: version,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
+
+      print('✅ WorkoutSession создан: ${session.displayName}');
+      return session;
+
+    } catch (e, stackTrace) {
+      print('❌ Error mapping to WorkoutSession: $e');
+      print('❌ Map data: $map');
+      print('❌ StackTrace: $stackTrace');
+      rethrow;
+    }
   }
 
-  /// ДОБАВЛЕНО: Метод fromJson для совместимости с database_helper
+  /// 🔄 Конвертация старого формата List в ClassicTimerStats
+  static ClassicTimerStats? _convertLegacyListToClassicStats(List<dynamic> legacyStats) {
+    print('🔄 Конвертируем legacy stats в ClassicTimerStats: $legacyStats');
+
+    try {
+      final List<int> lapTimes = legacyStats.cast<int>();
+
+      if (lapTimes.isEmpty) {
+        return null;
+      }
+
+      // Вычисляем статистики
+      final totalLaps = lapTimes.length;
+      final averageMs = lapTimes.reduce((a, b) => a + b) ~/ totalLaps;
+      final fastestMs = lapTimes.reduce((a, b) => a < b ? a : b);
+
+      // Вычисляем консистентность
+      double consistency = 0.0;
+      if (totalLaps > 1) {
+        final variance = lapTimes
+            .map((time) => (time - averageMs) * (time - averageMs))
+            .reduce((a, b) => a + b) / totalLaps;
+        final standardDeviation = variance > 0 ? math.sqrt(variance) : 0.0;
+        consistency = averageMs > 0
+            ? (100 - (standardDeviation / averageMs * 100)).clamp(0, 100)
+            : 0.0;
+      }
+
+      final convertedStats = ClassicTimerStats(
+        totalLaps: totalLaps,
+        averageRoundDuration: Duration(milliseconds: averageMs),
+        fastestRoundDuration: Duration(milliseconds: fastestMs),
+        consistencyPercent: consistency,
+        lapTimes: lapTimes.map((ms) => Duration(milliseconds: ms)).toList(),
+      );
+
+      print('✅ Legacy stats converted to ClassicTimerStats: $convertedStats');
+      return convertedStats;
+
+    } catch (e) {
+      print('❌ Ошибка конвертации legacy stats: $e');
+      return null;
+    }
+  }
+
+  /// Метод fromJson для совместимости с database_helper
   factory WorkoutSession.fromJson(Map<String, dynamic> json) => WorkoutSession.fromMap(json);
 
   @override

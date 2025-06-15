@@ -11,6 +11,7 @@ import '../../../shared/widgets/animations/animated_widgets.dart';
 import '../../../shared/widgets/dialogs/custom_dialogs.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import 'session_detail_screen.dart'; // ДОБАВЛЕНО: Импорт экрана деталей
+import '../../../debug/workout_debug_helper.dart';
 
 /// Экран истории тренировок
 class HistoryScreen extends StatefulWidget {
@@ -39,6 +40,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      WorkoutDebugHelper.fullDiagnostics();
+    });
     _loadHistory();
     _searchController.addListener(_onSearchChanged);
   }
